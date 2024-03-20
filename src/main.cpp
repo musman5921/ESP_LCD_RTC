@@ -16,6 +16,8 @@
   once device is configured it will jump into infinite loop of slide show until touch on screen is not detected
   if touch is detected then moving to the next task to handle homepage tasks
 
+  working on login credentials to save, load and autofill credential details of client and admin panel.
+
  */
 
 // Import Libraries
