@@ -105,7 +105,7 @@ void saveClientCredentials(const String& username, const String& password);
 void removeClientCredentials();
 void saveAdminCredentials(const String& username, const String& password);
 void removeAdminCredentials();
-void loadCredentials(String& username, String& password);
+void saveInternetCredentials(const String& ssid, const String& password);
 bool RememberIcon(uint16_t rememberLogin);
 void processClientLogin(uint16_t username, uint16_t passwordCommand, uint16_t passwordDisplay, uint16_t passwordIcon);
 void processAdminLogin(uint16_t username, uint16_t passwordCommand, uint16_t passwordDisplay, uint16_t passwordIcon);

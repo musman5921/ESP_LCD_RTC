@@ -17,6 +17,7 @@
   if touch is detected then moving to the next task to handle homepage tasks
 
   working on login credentials to save, load and autofill credential details of client and admin panel.
+  working on WiFi credentials to save, load and autofill ssid and password.
 
  */
 
@@ -65,6 +66,7 @@ void setup()
   vTaskSuspend(xHandlegps);
   xTaskCreate(dateTimeTask, "DateTimeTask", 2048, NULL, 1, &xHandledatetime);
   vTaskSuspend(xHandledatetime);
+  vTaskDelete(xHandledatetime); // only for testing
   xTaskCreate(loginTask, "LoginTask", 4096, NULL, 2, &xHandlelogin);
 
   xTaskCreate(configuredeviceTask, "ConfigureDeviceTask", 4096, NULL, 3, &xHandleconfigdevice);
