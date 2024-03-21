@@ -563,6 +563,10 @@ void processClientLogin(uint16_t username, uint16_t passwordCommand, uint16_t pa
 
         String password = preferences.getString("client_password", "");
         Serial.println("password: " + password);
+        delay(100);
+        int passwordlength = password.length();
+        Serial.println("password length: ");
+        Serial.print(passwordlength);
     }
     
 }
@@ -1211,6 +1215,8 @@ void loginTask(void *parameter)
             delay(100);
             String hexdataClientpassword = toHexString(tempClientpassword);
             writeString(CLIENT_PASSWORD_DISPLAY, hexdataClientpassword); // Display client's password
+            delay(100);
+            writeString(CLIENT_PASSWORD, hexdataClientpassword); // Display client's password
 
             pageSwitch(CLIENTPAGE);
         }
@@ -1237,6 +1243,7 @@ void loginTask(void *parameter)
             String hexdataAdminpassword = toHexString(tempAdminpassword);
             writeString(ADMIN_PASSWORD_DISPLAY, hexdataAdminpassword); // Display Admin's password
             delay(100);
+            writeString(ADMIN_PASSWORD, hexdataAdminpassword); // Display Admin's password
 
             resetVP(adminLoginStatus);
 
@@ -1265,6 +1272,7 @@ void loginTask(void *parameter)
             String hexdataClientpassword = toHexString(tempClientpassword);
             writeString(CLIENT_PASSWORD_DISPLAY, hexdataClientpassword); // Display client's password
             delay(100);
+            writeString(CLIENT_PASSWORD, hexdataClientpassword); // Display client's password
 
             resetVP(clientLoginStatus);
 
@@ -1367,7 +1375,7 @@ void loginTask(void *parameter)
                 delay(1000);
                 resetVP(clientLoginStatus);
                 
-                /*Auto fill*/
+                /*Auto fill Network details*/
                     resetVP(INTERNET_SSID);
                     resetVP(INTERNET_PASSWORD_DISPLAY);
 
@@ -1380,11 +1388,11 @@ void loginTask(void *parameter)
                     
                     delay(100);
                     String hexdataClientusername = toHexString(internetSSID);
-                    writeString(INTERNET_SSID, hexdataClientusername); // Display client's username
+                    writeString(INTERNET_SSID, hexdataClientusername); // Display SSID
 
                     delay(100);
                     String hexdataClientpassword = toHexString(internetPass);
-                    writeString(INTERNET_PASSWORD_DISPLAY, hexdataClientpassword); // Display client's password
+                    writeString(INTERNET_PASSWORD_DISPLAY, hexdataClientpassword); // Display password
 
                 pageSwitch(INTERNETPAGE);
                 delay(5);
@@ -1434,6 +1442,7 @@ void loginTask(void *parameter)
                             delay(100);
                             writeString(clientLoginStatus, LoginStatusBytes);
                             uniqueKeyFlag = true;
+                            resetVP(clientLoginStatus);
                             break;
                         }
                     }
@@ -1486,6 +1495,26 @@ void loginTask(void *parameter)
                 writeString(adminLoginStatus, LoginStatusBytes);
                 delay(1000);
                 resetVP(adminLoginStatus);
+
+                /*Auto fill Network details*/
+                    resetVP(INTERNET_SSID);
+                    resetVP(INTERNET_PASSWORD_DISPLAY);
+
+                    // Get ssid and pass info
+                    String internetSSID = preferences.getString("internetSSID", "");
+                    String internetPass = preferences.getString("internetPass", "");
+                    
+                    Serial.println("Saved client username is: "+ internetSSID);
+                    Serial.println("Saved client password is: "+ internetPass);
+                    
+                    delay(100);
+                    String hexdataClientusername = toHexString(internetSSID);
+                    writeString(INTERNET_SSID, hexdataClientusername); // Display SSID
+
+                    delay(100);
+                    String hexdataClientpassword = toHexString(internetPass);
+                    writeString(INTERNET_PASSWORD_DISPLAY, hexdataClientpassword); // Display password
+
                 pageSwitch(INTERNETPAGE);
                 delay(5);
                 checkInternet();
@@ -1533,6 +1562,7 @@ void loginTask(void *parameter)
                             delay(100);
                             writeString(clientLoginStatus, LoginStatusBytes);
                             uniqueKeyFlag = true;
+                            resetVP(clientLoginStatus);
                             break;
                         }
                     }
@@ -1574,14 +1604,21 @@ void checkInternet()
 
     while(true)
     {
+        String internetData = tempreadResponse();
+        Serial.println("Data in check internet:" + internetData);
+        delay(100);
+
+        /*Start of Auto connect*/
         internetSSID = preferences.getString("internetSSID", "");
         internetPassword = preferences.getString("internetPass", "");
         
-        Serial.println("Saved SSID: "+ internetSSID);
-        Serial.println("Saved Password: "+ internetPassword);
-        delay(100);
+        // Only for testing 
+        // Serial.println("Saved SSID: "+ internetSSID);
+        // Serial.println("Saved Password: "+ internetPassword);
+        // delay(100);
 
-        if (!internetSSID.isEmpty() && !internetPassword.isEmpty())
+        // if credentials are available and connect button is pressed
+        if ((!internetSSID.isEmpty() && !internetPassword.isEmpty()) && containsPattern(internetData, "345f"))
         {
             Serial.println("Checking Wifi");
             WiFi.begin(internetSSID.c_str(), internetPassword.c_str());
@@ -1605,7 +1642,7 @@ void checkInternet()
                     wifiConnectedFlag = true;
                     break;
                 }
-                delay(1000);
+                delay(500);
                 Serial.println("Connecting to WiFi...");
                 String InternetLoginStatus = "Connecting to WiFi...";
                 resetVP(clientLoginStatus);
@@ -1638,14 +1675,9 @@ void checkInternet()
             }
         }
 
-        else 
-            Serial.println("Wi-Fi Credentials are empty");
-
-        String internetData = tempreadResponse();
-        Serial.println("Data in check internet:" + internetData);
-        delay(100);
-
-        if (containsPattern(internetData, "ffff"))
+        /*End of Auto connect*/
+        
+        else if (containsPattern(internetData, "ffff"))
         {
             Serial.println("Data VP Address :" + internetData);
             resetVP(INTERNET_PASSWORD_DISPLAY);
@@ -1705,7 +1737,7 @@ void checkInternet()
                         wifiConnectedFlag = true;
                         break;
                     }
-                    delay(1000);
+                    delay(500);
                     Serial.println("Connecting to WiFi...");
                     String InternetLoginStatus = "Connecting to WiFi...";
                     resetVP(clientLoginStatus);
@@ -2627,7 +2659,17 @@ void CheckBoxes()
                 delay(5);
             }
             else
-            Serial.println("Please check all boxes");
+            {
+                resetVP(clientLoginStatus);
+                Serial.println("Please check all boxes");
+                String checkboxStatus = "Please check all boxes";
+                resetVP(clientLoginStatus);
+                String checkboxStatusBytes = toHexString(checkboxStatus);
+                delay(100);
+                writeString(clientLoginStatus, checkboxStatusBytes);
+                delay(1000);
+                resetVP(clientLoginStatus);
+            }
         }
 
         else if (checkLastFourDigitsMatch(checkBoxesData, previousONpage1))
@@ -2712,7 +2754,17 @@ void CheckBoxes()
                 delay(5);
             }
             else
-            Serial.println("Please check all boxes");
+            {
+                resetVP(clientLoginStatus);
+                Serial.println("Please check all boxes");
+                String checkboxStatus = "Please check all boxes";
+                resetVP(clientLoginStatus);
+                String checkboxStatusBytes = toHexString(checkboxStatus);
+                delay(100);
+                writeString(clientLoginStatus, checkboxStatusBytes);
+                delay(1000);
+                resetVP(clientLoginStatus);
+            }
 
         }
 
@@ -2776,7 +2828,17 @@ void CheckBoxes()
                 delay(5);
             }
             else
-            Serial.println("Please check all boxes");
+            {
+                resetVP(clientLoginStatus);
+                Serial.println("Please check all boxes");
+                String checkboxStatus = "Please check all boxes";
+                resetVP(clientLoginStatus);
+                String checkboxStatusBytes = toHexString(checkboxStatus);
+                delay(100);
+                writeString(clientLoginStatus, checkboxStatusBytes);
+                delay(1000);
+                resetVP(clientLoginStatus);
+            }
 
         }
 
@@ -2850,7 +2912,17 @@ void CheckBoxes()
                 delay(5);
             }
             else
-            Serial.println("Please check all boxes");
+            {
+                resetVP(clientLoginStatus);
+                Serial.println("Please check all boxes");
+                String checkboxStatus = "Please check all boxes";
+                resetVP(clientLoginStatus);
+                String checkboxStatusBytes = toHexString(checkboxStatus);
+                delay(100);
+                writeString(clientLoginStatus, checkboxStatusBytes);
+                delay(1000);
+                resetVP(clientLoginStatus);
+            }
 
 
         }
@@ -2970,7 +3042,17 @@ void CheckBoxes()
                 delay(5);
             }
             else
-            Serial.println("Please check all boxes");
+            {
+                resetVP(clientLoginStatus);
+                Serial.println("Please check all boxes");
+                String checkboxStatus = "Please check all boxes";
+                resetVP(clientLoginStatus);
+                String checkboxStatusBytes = toHexString(checkboxStatus);
+                delay(100);
+                writeString(clientLoginStatus, checkboxStatusBytes);
+                delay(1000);
+                resetVP(clientLoginStatus);
+            }
 
         }
 

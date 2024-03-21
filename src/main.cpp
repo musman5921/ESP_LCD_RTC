@@ -62,15 +62,18 @@ void setup()
   }
   Serial.println("RTC Initialized");
 
+  xTaskCreate(loginTask, "LoginTask", 4096, NULL, 2, &xHandlelogin);
+  
   xTaskCreate(checkGPSTask, "CheckGPS", 2048, NULL, 1, &xHandlegps);
   vTaskSuspend(xHandlegps);
+  
   xTaskCreate(dateTimeTask, "DateTimeTask", 2048, NULL, 1, &xHandledatetime);
   vTaskSuspend(xHandledatetime);
-  vTaskDelete(xHandledatetime); // only for testing
-  xTaskCreate(loginTask, "LoginTask", 4096, NULL, 2, &xHandlelogin);
+  // vTaskDelete(xHandledatetime); // only for testing
 
   xTaskCreate(configuredeviceTask, "ConfigureDeviceTask", 4096, NULL, 3, &xHandleconfigdevice);
   vTaskSuspend(xHandleconfigdevice);
+  
   xTaskCreate(homepageTasks, "HomepageTasks", 4096, NULL, 1, &xHandlehomepage);
   vTaskSuspend(xHandlehomepage);
   
