@@ -91,6 +91,7 @@ void checkGPSTask(void *parameter);
 bool getGPSTime();
 void dateTimeTask(void *parameter);
 void loginTask(void *parameter);
+void readeyeIcon(String temppassword, uint16_t passwordvp, uint16_t passwordIcon, uint16_t passwordDisplay);
 void checkInternet();
 void configuredeviceTask(void *parameter);
 void companyDetails();

@@ -142,7 +142,7 @@ extern const int INTERNETPAGE;
 extern const int INTERNET_SSID;
 extern const int INTERNET_PASSWORD;
 extern const int INTERNET_PASSWORD_DISPLAY;
-extern const int INTERNET_PASSWORD_HIDE;
+extern const int INTERNET_PASSWORD_ICON;
 extern const int INTERNET_CONNECT_BUTTON;
 extern const int UNIQUE_KEY;
 extern const int UNIQUE_KEY_OKAY_BUTTON;
