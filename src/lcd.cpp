@@ -54,6 +54,7 @@ void sendWriteCommand(uint16_t address, byte data)
     Serial2.write(frame, sizeof(frame));
 }
 
+// Reset vp address
 void resetVP(uint16_t address)
 {
     byte frame[] = {0x5A, 0xA5, 0x2B, 0x82, (byte)(address >> 8), (byte)(address & 0xFF)};
@@ -1405,8 +1406,6 @@ void loginTask(void *parameter)
                 while (true)
                 {
                     delay(100);
-                    sendReadCommand(UNIQUE_KEY_OKAY_BUTTON, 0x28);
-                    delay(100);
                     String uniqueButton = tempreadResponse();
                     Serial.println("Data from uniqueButton: " + uniqueButton);
                     
@@ -1441,7 +1440,7 @@ void loginTask(void *parameter)
                             Serial.println("Device Succesfully Added to Fyrebox Network");
                             String LoginStatus = "Device Succesfully Added to Fyrebox Network";
                             String LoginStatusBytes = toHexString(LoginStatus);
-                            delay(100);
+                            delay(1000);
                             writeString(clientLoginStatus, LoginStatusBytes);
                             uniqueKeyFlag = true;
                             resetVP(clientLoginStatus);
@@ -1526,10 +1525,9 @@ void loginTask(void *parameter)
                 while (true)
                 {
                     delay(100);
-                    sendReadCommand(UNIQUE_KEY_OKAY_BUTTON, 0x28);
-                    delay(100);
                     String uniqueButton = tempreadResponse();
                     Serial.println("Data from uniqueButton: " + uniqueButton);
+
                     if (checkLastFourDigitsMatch(uniqueButton, uniqueButtonDigits))
                     {
                         delay(100);
@@ -1561,7 +1559,7 @@ void loginTask(void *parameter)
                             Serial.println("Device Succesfully Added to Fyrebox Network");
                             String LoginStatus = "Device Succesfully Added to Fyrebox Network";
                             String LoginStatusBytes = toHexString(LoginStatus);
-                            delay(100);
+                            delay(1000);
                             writeString(clientLoginStatus, LoginStatusBytes);
                             uniqueKeyFlag = true;
                             resetVP(clientLoginStatus);
@@ -2188,14 +2186,14 @@ void manufactureDetails()
             Serial.println("Manufacturer Date: " + dateOfManufacture);
 
             delay(100);
-            sendReadCommand(VP_MANUFACTURE_DATE, 0x28);
+            sendReadCommand(VP_MANUFACTURE_SERIAL_N0, 0x28);
             delay(100);
             String tempserialNumber = tempreadResponse();
             delay(100);
             String snremoverHeaders = removeFirst7Bytes(tempserialNumber);
             String sncextractedData = extractDataBeforeMarker(snremoverHeaders, "ffff");
             serialNumber = hexToString(sncextractedData);
-            Serial.println("Manufacturer Email: " + serialNumber);
+            Serial.println("Manufacturer Serial No: " + serialNumber);
             companyManufacturerDetails = true;
             
             vTaskResume(xHandledatetime); // Resume date time task after data is fetched

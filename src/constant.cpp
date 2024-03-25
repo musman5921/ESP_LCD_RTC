@@ -39,14 +39,19 @@ int year = 0;
 int weekByMonth = 0;
 int weekByYear = 0;
 
-// Define Values
-const String clientPanelDigits = "1101";
-const String adminPanelDigits = "1102";
+// Predefined Credentials
 const String predefinedSSID = "abc";
 const String predefinedPassword = "abc123";
+
+// Defined Values
+const String clientPanelDigits = "1101";
+const String adminPanelDigits = "1102";
+
 String internetSSID = "";
 String internetPassword = "";
+
 String storedUniqueData = "";
+
 String companyName = "";
 String companyAddress = "";
 String keyResponsiblePersonName = "";
@@ -61,35 +66,44 @@ String keyResponsiblePerson4Name = "";
 String keyResponsiblePerson4Contact = "";
 String localFireDepartmentName = "";
 String localFireDepartmentContact = "";
+
 String manufacturerName = "";
 String manufacturerContact = "";
 String manufacturerEmail = "";
 String dateOfManufacture = "";
 String serialNumber = "";
+
 String locationOfUnit = "";
 String assignedUnitNumber = "";
 String dateOfUnitInstallation = "";
 String unitInstaller = "";
 String unitContactDetails = "";
 String ipAddress = "";
+
 const String showClient = "1101";
 const String showAdmin = "1102";
 const String switchUser = "2ec";
 const String uniqueButtonDigits = "1101";
+
 const String predefinedInternetSSID = "Machadev";
 const String predefinedInternetPassword = "13060064";
 const String showPassword = "103";
 const String hidePassword = "102";
+
 const String companyDoneButtonYes = "1101";
 const String companyDoneButtonNo = "1102";
 const String Data_Uploading = "1101";
+
 const String Manufacturing_Details_Upload = "1101";
 const String Manufacturing_Details_Back = "1102";
+
 const String Unit_Details_Upload = "1101";
 const String Unit_Details_Back = "1102";
+
 const String Left_Arrow_Indication = "1101";
 const String Right_Arrow_Indication = "1102";
 const String Arrow_Details_Back = "1103";
+
 const String Home_Screen_Menu = "1101";
 const String Menu_Home_Screen = "1102";
 const String Home_Screen_Report = "1101";
@@ -124,8 +138,10 @@ const int CLIENT_PASSWORD = 0x3164;
 const int CLIENT_PASSWORD_DISPLAY = 0x2F38;
 const int CLIENT_PASSWORD_ICON = 0x31C8;
 const int CLIENT_REMEMBER_LOGIN = 0x31c9;
+
 const int clientLoginStatus = 0x3000;
 const int adminLoginStatus = 0x3000;
+
 const int ADMIN_SSID = 0x32CB;
 const int ADMIN_PASSWORD = 0x332F;
 const int ADMIN_PASSWORD_DISPLAY = 0x2f9c;
@@ -133,43 +149,50 @@ const int ADMIN_PASSWORD_HIDE = 0x3393;
 const int ADMIN_REMEMBER_LOGIN = 0x3394;
 const int ADMIN_PASSWORD_ICON = 0x3393;
 const int LOGIN = 0x31CA;
+
 const int INTERNET_SSID = 0x3396;
 const int INTERNET_PASSWORD = 0x33fa;
 const int INTERNET_PASSWORD_DISPLAY = 0x2ed4;
 const int INTERNET_PASSWORD_ICON = 0x345e;
 const int INTERNET_CONNECT_BUTTON = 0x345f;
+
 const int UNIQUE_KEY = 0x3460;
 const int UNIQUE_KEY_OKAY_BUTTON = 0x34c4;
-const int COMPANY_DONE_BUTTON_ADDRESS = 0x3a3c;
+
 const int VP_COMPANY_NAME = 0x34c5;
 const int VP_COMPANY_ADDRESS = 0x3529;
 const int VP_KEY_RESPONSIBLE_PERSON_NAME = 0x358d;
 const int VP_KEY_RESPONSIBLE_PERSON_CONTACT = 0x35f1;
-const int VP_KEY_RESPONSIBLE_PERSON1_NAME = 0x3665;
-const int VP_KEY_RESPONSIBLE_PERSON1_CONTACT = 0x3655;
-const int VP_AUTO_UPLOAD_COMPANY_DETAILS = 0x3a3d;
+const int VP_KEY_RESPONSIBLE_PERSON1_NAME = 0x3655;
+const int VP_KEY_RESPONSIBLE_PERSON1_CONTACT = 0x36b9;
 const int VP_KEY_RESPONSIBLE_PERSON2_NAME = 0x371d;
 const int VP_KEY_RESPONSIBLE_PERSON2_CONTACT = 0x3781;
 const int VP_KEY_RESPONSIBLE_PERSON3_NAME = 0x37e5;
 const int VP_KEY_RESPONSIBLE_PERSON3_CONTACT = 0x3849;
-const int VP_KEY_RESPONSIBLE_PERSON4_NAME = 0x3911;
-const int VP_KEY_RESPONSIBLE_PERSON4_CONTACT = 0x39d9;
+const int VP_KEY_RESPONSIBLE_PERSON4_NAME = 0x38ad;
+const int VP_KEY_RESPONSIBLE_PERSON4_CONTACT = 0x3911;
 const int VP_LOCAL_FIRE_DEPARTMENT_NAME = 0x3975;
 const int VP_LOCAL_FIRE_DEPARTMENT_CONTACT = 0x39d9;
+const int COMPANY_DONE_BUTTON_ADDRESS = 0x3a3c;
+const int VP_AUTO_UPLOAD_COMPANY_DETAILS = 0x3a3d;
+
 const int VP_MANUFACTURING_DETAILS = 0x3a40;
 const int VP_MANUFACTURE_NAME = 0x3c97;
 const int VP_MANUFACTURE_CONTACT = 0x3cfb;
 const int VP_MANUFACTURE_EMAIL = 0x3d5f;
 const int VP_MANUFACTURE_DATE = 0x3dc3;
 const int VP_MANUFACTURE_SERIAL_N0 = 0x3e27;
+
 const int VP_UNIT_DONE = 0x3a3e;
 const int VP_LOCATION_OF_UNIT = 0x3a3f;
 const int VP_ASSIGNED_UNIT_NUMBER = 0x3aa3;
 const int VP_DATE_OF_UNIT_INSTALLATION = 0x3b07;
-const int VP_UNIT_INSTALLER = 0x3b68;
+const int VP_UNIT_INSTALLER = 0x3b6b;
 const int VP_UNIT_CONTACT_DETAILS = 0x3bcf;
-const int VP_UNIT_IP_ADDRESS = 0x3cc3;
+const int VP_UNIT_IP_ADDRESS = 0x3c33;
+
 const int VP_DEVICE_DRIVER_RETURN_KEY = 0x3e8b;
+
 const int VP_UNIT_DATE = 0x6100;
 const int VP_UNIT_TIME = 0x6000;
 

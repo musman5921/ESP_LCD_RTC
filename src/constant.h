@@ -46,12 +46,19 @@ extern int year;
 extern int weekByMonth;
 extern int weekByYear;
 
+// Predefined Credentials
+extern const String predefinedSSID;
+extern const String predefinedPassword;
+
 // Defined Values
 extern const String clientPanelDigits;
 extern const String adminPanelDigits;
+
 extern String internetSSID;
 extern String internetPassword;
+
 extern String storedUniqueData;
+
 extern const String showPassword;
 extern const String hidePassword;
 extern const String companyDoneButtonYes;
@@ -71,6 +78,7 @@ extern String keyResponsiblePerson4Contact;
 extern String localFireDepartmentName;
 extern String localFireDepartmentContact;
 extern const String Data_Uploading;
+
 extern const int COMPANY_MANUFACTURE_DETAILS;
 extern const String Manufacturing_Details_Upload;
 extern const String Manufacturing_Details_Back;
@@ -79,6 +87,7 @@ extern String manufacturerContact;
 extern String manufacturerEmail;
 extern String dateOfManufacture;
 extern String serialNumber;
+
 extern String locationOfUnit;
 extern String assignedUnitNumber;
 extern String dateOfUnitInstallation;
@@ -87,9 +96,11 @@ extern String unitContactDetails;
 extern String ipAddress;
 extern const String Unit_Details_Upload;
 extern const String Unit_Details_Back;
+
 extern const String Left_Arrow_Indication;
 extern const String Right_Arrow_Indication;
 extern const String Arrow_Details_Back;
+
 extern const String Home_Screen_Menu;
 extern const String Menu_Home_Screen;
 extern const String Home_Screen_Report;
@@ -127,10 +138,12 @@ extern const int CLIENT_PASSWORD;
 extern const int ADMIN_SSID;
 extern const int ADMIN_PASSWORD;
 extern const int LOGIN;
+
 extern const int COPYRIGHT;
 extern const int checkboxVP;
 extern const int clientLoginStatus;
 extern const int adminLoginStatus;
+
 extern const int CLIENT_PASSWORD_DISPLAY;
 extern const int CLIENT_PASSWORD_ICON;
 extern const int CLIENT_REMEMBER_LOGIN;
@@ -138,15 +151,18 @@ extern const int ADMIN_PASSWORD_DISPLAY;
 extern const int ADMIN_PASSWORD_HIDE;
 extern const int ADMIN_REMEMBER_LOGIN;
 extern const int ADMIN_PASSWORD_ICON;
+
 extern const int INTERNETPAGE;
 extern const int INTERNET_SSID;
 extern const int INTERNET_PASSWORD;
 extern const int INTERNET_PASSWORD_DISPLAY;
 extern const int INTERNET_PASSWORD_ICON;
 extern const int INTERNET_CONNECT_BUTTON;
+
 extern const int UNIQUE_KEY;
 extern const int UNIQUE_KEY_OKAY_BUTTON;
 extern const int UNIQUE_KEY_PAGE;
+
 extern const String predefinedInternetSSID;
 extern const String predefinedInternetPassword;
 extern const String showClient;
@@ -174,12 +190,14 @@ extern const int VP_KEY_RESPONSIBLE_PERSON4_NAME;
 extern const int VP_KEY_RESPONSIBLE_PERSON4_CONTACT;
 extern const int VP_LOCAL_FIRE_DEPARTMENT_NAME;
 extern const int VP_LOCAL_FIRE_DEPARTMENT_CONTACT;
+
 extern const int VP_MANUFACTURING_DETAILS;
 extern const int VP_MANUFACTURE_NAME;
 extern const int VP_MANUFACTURE_CONTACT;
 extern const int VP_MANUFACTURE_EMAIL;
 extern const int VP_MANUFACTURE_DATE;
 extern const int VP_MANUFACTURE_SERIAL_N0;
+
 extern const int VP_UNIT_DONE;
 extern const int VP_ASSIGNED_UNIT_NUMBER;
 extern const int VP_DATE_OF_UNIT_INSTALLATION;
@@ -188,8 +206,10 @@ extern const int VP_UNIT_CONTACT_DETAILS;
 extern const int VP_UNIT_IP_ADDRESS;
 extern const int COMPANY_UNIT_DETAILS;
 extern const int VP_LOCATION_OF_UNIT;
+
 extern const int DEVICE_DIRECTION_DETAILS_PAGE;
 extern const int VP_DEVICE_DRIVER_RETURN_KEY;
+
 extern const int DEVICE_CONFIGURED_SUCCESSFULLY;
 extern const int HOME_PAGE;
 extern const int MENU_PAGE;
@@ -336,10 +356,6 @@ extern const int Prev_page5;
 // RTC
 extern unsigned long lastActivityTime;
 extern const unsigned long idleTimeout;
-
-// Predefined Credentials
-extern const String predefinedSSID;
-extern const String predefinedPassword;
 
 // Flags
 extern bool clientLogin;
