@@ -211,6 +211,7 @@ extern const int DEVICE_DIRECTION_DETAILS_PAGE;
 extern const int VP_DEVICE_DRIVER_RETURN_KEY;
 
 extern const int DEVICE_CONFIGURED_SUCCESSFULLY;
+extern const int UNITSLISTS_PAGE;
 extern const int HOME_PAGE;
 extern const int MENU_PAGE;
 extern const int SHOW_REPORT_PAGE;

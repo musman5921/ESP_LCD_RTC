@@ -104,6 +104,7 @@ void saveAdminCredentials(const String& username, const String& password);
 void removeAdminCredentials();
 void saveInternetCredentials(const String& ssid, const String& password);
 bool RememberIcon(uint16_t rememberLogin);
+void showMessage(uint16_t VP_ADDRESS, String displaymessage);
 
 // Not defined
 // void checkConnectButton();

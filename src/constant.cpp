@@ -450,6 +450,7 @@ const int COMPANY_UNIT_DETAILS = 0x000D;
 const int COMPANY_MANUFACTURE_DETAILS = 0x000E;
 const int DEVICE_DIRECTION_DETAILS_PAGE = 0x0010;
 const int DEVICE_CONFIGURED_SUCCESSFULLY = 0x0014;
+const int UNITSLISTS_PAGE = 0x0015;
 const int HOME_PAGE = 0x001A;
 const int CHECKLISTPAGE1 = 0x001B;
 const int CHECKLISTPAGE2 = 0x001C;
@@ -458,7 +459,6 @@ const int CHECKLISTPAGE4 = 0x001E;
 const int CHECKLISTPAGE5 = 0x001F;
 const int SHOW_REPORT_PAGE = 0x0020;
 const int MENU_PAGE = 0x0025;
-
 
 // Flags
 bool clientLogin = false;

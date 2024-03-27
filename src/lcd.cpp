@@ -1440,8 +1440,9 @@ void loginTask(void *parameter)
                             Serial.println("Device Succesfully Added to Fyrebox Network");
                             String LoginStatus = "Device Succesfully Added to Fyrebox Network";
                             String LoginStatusBytes = toHexString(LoginStatus);
-                            delay(1000);
+                            delay(100);
                             writeString(clientLoginStatus, LoginStatusBytes);
+                            delay(1000);
                             uniqueKeyFlag = true;
                             resetVP(clientLoginStatus);
                             break;
@@ -1559,8 +1560,9 @@ void loginTask(void *parameter)
                             Serial.println("Device Succesfully Added to Fyrebox Network");
                             String LoginStatus = "Device Succesfully Added to Fyrebox Network";
                             String LoginStatusBytes = toHexString(LoginStatus);
-                            delay(1000);
+                            delay(100);
                             writeString(clientLoginStatus, LoginStatusBytes);
+                            delay(1000);
                             uniqueKeyFlag = true;
                             resetVP(clientLoginStatus);
                             break;
@@ -1654,7 +1656,10 @@ void checkInternet()
         // if credentials are available and connect button is pressed
         if ((!internetSSID.isEmpty() && !internetPassword.isEmpty()) && containsPattern(internetData, "345f"))
         {
-            Serial.println("Checking Wifi");
+            String InternetStatus = "Connecting to WiFi";
+            Serial.println(InternetStatus);
+            showMessage(clientLoginStatus , InternetStatus);
+
             WiFi.begin(internetSSID.c_str(), internetPassword.c_str());
 
             unsigned long startAttemptTime = millis();
@@ -1676,15 +1681,6 @@ void checkInternet()
                     wifiConnectedFlag = true;
                     break;
                 }
-                delay(500);
-                Serial.println("Connecting to WiFi...");
-                String InternetLoginStatus = "Connecting to WiFi...";
-                resetVP(clientLoginStatus);
-                String InternetLoginStatusBytes = toHexString(InternetLoginStatus);
-                delay(100);
-                writeString(clientLoginStatus, InternetLoginStatusBytes);
-                delay(500);
-                resetVP(clientLoginStatus);
             }
 
             if (wifiConnectedFlag)
@@ -1971,6 +1967,9 @@ void companyDetails()
         if(containsPattern(companyDetails, Data_Uploading))
         {
             vTaskSuspend(xHandledatetime); // Suspend date time task while fetching data
+            
+            // String message = "Please wait while fetching Data";
+            // showMessage(clientLoginStatus, message);
 
             delay(100);
             sendReadCommand(VP_COMPANY_NAME, 0x28);
@@ -2111,6 +2110,8 @@ void companyDetails()
             Serial.println("Local Fire Department Contact: " + localFireDepartmentContact);
             companyDetailsFlag = true;
 
+            resetVP(clientLoginStatus);
+
             vTaskResume(xHandledatetime); // Resume date time task after data is fetched
         }
 
@@ -2144,6 +2145,9 @@ void manufactureDetails()
         if(containsPattern(manufacturerDetails, Manufacturing_Details_Upload))
         {
             vTaskSuspend(xHandledatetime); // Suspend date time task while fetching data
+
+            // String message = "Please wait while fetching Data";
+            // showMessage(clientLoginStatus, message);
 
             delay(100);
             sendReadCommand(VP_MANUFACTURE_NAME, 0x28);
@@ -2195,6 +2199,8 @@ void manufactureDetails()
             serialNumber = hexToString(sncextractedData);
             Serial.println("Manufacturer Serial No: " + serialNumber);
             companyManufacturerDetails = true;
+
+            resetVP(clientLoginStatus);
             
             vTaskResume(xHandledatetime); // Resume date time task after data is fetched
         }
@@ -2244,6 +2250,9 @@ void unitDetails()
         if (containsPattern(unitDetails, Unit_Details_Upload))
         {
             vTaskSuspend(xHandledatetime); // Suspend date time task while fetching data
+
+            // String message = "Please wait while fetching Data";
+            // showMessage(clientLoginStatus, message);
 
             delay(100);
             sendReadCommand(VP_LOCATION_OF_UNIT, 0x28);
@@ -2305,6 +2314,8 @@ void unitDetails()
             ipAddress = hexToString(ipdcextractedData);
             Serial.println("Unit IP Address: " + ipAddress);
             UnitDetailsFlag = true;
+
+            resetVP(clientLoginStatus);
 
             vTaskResume(xHandledatetime); // Resume date time task after data is fetched
         }
@@ -2438,7 +2449,7 @@ void slideShow()
             vTaskResume(xHandledatetime); // Resume if touch is detected
             break;
         }
-
+        /*
         pageSwitch(0x0018);
         delay(1000);
         ack = tempreadResponse();
@@ -2479,7 +2490,7 @@ void slideShow()
             delay(5);
             vTaskResume(xHandledatetime); // Resume if touch is detected
             break;
-        }
+        }*/
     }
     Serial.println("slideShow completed");
 }
@@ -2490,115 +2501,136 @@ void homepageTasks(void *parameter)
 
     while(true)
     {
-        // if(ConfigureDeviceFlag)
-        // {
-            checkData = tempreadResponse();
+        // Reset the last activity time
+        lastActivityTime = millis();
 
-            // unwanted lcd response
-            if(checkData == "5aa53824f4b")
+        checkData = tempreadResponse();
+
+        // unwanted lcd response
+        if(checkData == "5aa53824f4b")
+        {
+            checkData = "";
+        }
+        Serial.println("Data in homepageTasks:" +checkData);
+        delay(100);
+
+        // Show/Hide Menu
+        if (containsPattern(checkData, "6211"))
+        {
+            Serial.println("Data from home screen menu");
+
+            if (containsPattern(checkData, Home_Screen_Menu))
             {
-                checkData = "";
-            }
-            Serial.println("Data in homepageTasks:" +checkData);
-            delay(100);
-
-            // Show/Hide Menu
-            if (containsPattern(checkData, "6211"))
-            {
-                Serial.println("Data from home screen menu");
-
-                if (containsPattern(checkData, Home_Screen_Menu))
-                {
-                    pageSwitch(MENU_PAGE);
-                    Serial.println("Page Switched");
-                    delay(5);
-                }
-
-                else if (containsPattern(checkData, Menu_Home_Screen))
-                {
-                    pageSwitch(HOME_PAGE);
-                    Serial.println("Page Switched");
-                    delay(5);
-                }
+                pageSwitch(MENU_PAGE);
+                Serial.println("Page Switched");
+                delay(5);
             }
 
-            // Show Report
-            else if (containsPattern(checkData, "6215"))
+            else if (containsPattern(checkData, Menu_Home_Screen))
             {
-                Serial.println("Data from home screen report");
+                pageSwitch(HOME_PAGE);
+                Serial.println("Page Switched");
+                delay(5);
+            }
+        }
 
-                if (containsPattern(checkData, Home_Screen_Report))
-                {
-                    pageSwitch(SHOW_REPORT_PAGE); 
-                    Serial.println("Page Switched");
-                    delay(5);
+        // Show Units lists
+        else if(containsPattern(checkData, "6214"))
+        {
+            pageSwitch(UNITSLISTS_PAGE);
+            Serial.println("Page Switched");
+            delay(5);
+        }
 
-                    slideShowFlag = false;
-                    displayIconsFlag = true;
+        // Show Report
+        else if (containsPattern(checkData, "6215"))
+        {
+            Serial.println("Data from home screen report");
 
-                    displayIcons();
-                }
+            if (containsPattern(checkData, Home_Screen_Report))
+            {
+                pageSwitch(SHOW_REPORT_PAGE); 
+                Serial.println("Page Switched");
+                delay(5);
+
+                slideShowFlag = false;
+                displayIconsFlag = true;
+
+                displayIcons();
+            }
+        }
+
+        // Show Checklist
+        else if (containsPattern(checkData, "6217") && !dataEnteredtoday)
+        {
+            Serial.println("Data from home screen checklist");
+            
+            lastDataEntryEEPROM = EEPROM.read(EEPROMAddress);
+            Serial.print("Last data entry week number: ");Serial.println(lastDataEntryEEPROM);
+
+            if(weekByYear == lastDataEntryEEPROM)
+            {
+                dataEnteredtoday = false;
+                Serial.println("Data Entered today");
             }
 
-            // Show Checklist
-            else if (containsPattern(checkData, "6217") && !dataEnteredtoday)
+            else if(weekByYear > lastDataEntryEEPROM)
             {
-                Serial.println("Data from home screen checklist");
+                weekElapsed = true;
+                Serial.println("Week Elapsed");
+            }
+
+            else
+            {
+                Serial.println("Next data will be received in next week");
+            }
+
+            if (containsPattern(checkData, Home_Screen_Checklist))
+            {
+                pageSwitch(CHECKLISTPAGE1); 
+                Serial.println("Page Switched");
+                delay(5);
+
+                slideShowFlag = false;
+                checkBoxFlag = true;
                 
-                lastDataEntryEEPROM = EEPROM.read(EEPROMAddress);
-                Serial.print("Last data entry week number: ");Serial.println(lastDataEntryEEPROM);
-
-                if(weekByYear == lastDataEntryEEPROM)
-                {
-                    dataEnteredtoday = false;
-                    Serial.println("Data Entered today");
-                }
-
-                else if(weekByYear > lastDataEntryEEPROM)
-                {
-                    weekElapsed = true;
-                    Serial.println("Week Elapsed");
-                }
-
-                else
-                {
-                    Serial.println("Next data will be received in next week");
-                }
-
-                if (containsPattern(checkData, Home_Screen_Checklist))
-                {
-                    pageSwitch(CHECKLISTPAGE1); 
-                    Serial.println("Page Switched");
-                    delay(5);
-
-                    slideShowFlag = false;
-                    checkBoxFlag = true;
-                    
-                    CheckBoxes();
-                }
+                CheckBoxes();
             }
+        }
 
-            // Checklist Data is Received
-            else if(containsPattern(checkData, "6217") && dataEnteredtoday)
+        // Checklist Data is Received
+        else if(containsPattern(checkData, "6217") && dataEnteredtoday)
+        {
+            Serial.println("Data is Received, next data will be received in next week");
+        }
+
+        // Start Slide show
+        else if (containsPattern(checkData, "6218")) 
+        {
+            activateSlideShow = true;
+            Serial.println("Data from home screen back");
+
+            if (containsPattern(checkData, Home_Screen_Back))
             {
-                Serial.println("Data is Received, next data will be received in next week");
+                // Start slideShow
+                slideShowFlag = true;
+                slideShow();
             }
+        }
 
-            // Start Slide show
-            else if (containsPattern(checkData, "6218")) 
-            {
-                activateSlideShow = true;
-                Serial.println("Data from home screen back");
-
-                if (containsPattern(checkData, Home_Screen_Back))
-                {
-                    // Start slideShow
-                    slideShowFlag = true;
-                    slideShow();
-                }
-            }
-        // }
+        // Check if the idle timeout has elapsed
+        else if (millis() - lastActivityTime >= idleTimeout) 
+        {
+            Serial.println("Idle timeout has elapsed");
+            // Start slideShow
+            slideShowFlag = true;
+            slideShow();
+            
+            // Reset the last activity time
+            lastActivityTime = millis();
+        }
     }
+
     Serial.println("homepageTasks completed");
     // Serial.println("homepageTasks deleted");
     // vTaskDelete(xHandlehomepage); // Delete the task
@@ -2623,6 +2655,9 @@ void CheckBoxes()
         if (checkLastFourDigitsMatch(checkBoxesData, geticonPage1))
 		{
             vTaskSuspend(xHandledatetime); // Suspend date time task while fetching data
+
+            // String message = "Please wait while fetching Data";
+            // showMessage(clientLoginStatus, message);
 
 			sendReadCommand(CONTROL_FUNCTION, 0x1);
 			delay(100);
@@ -2694,13 +2729,8 @@ void CheckBoxes()
             }
             else
             {
-                resetVP(clientLoginStatus);
-                Serial.println("Please check all boxes");
                 String checkboxStatus = "Please check all boxes";
-                resetVP(clientLoginStatus);
-                String checkboxStatusBytes = toHexString(checkboxStatus);
-                delay(100);
-                writeString(clientLoginStatus, checkboxStatusBytes);
+                showMessage(clientLoginStatus, checkboxStatus);
                 delay(1000);
                 resetVP(clientLoginStatus);
             }
@@ -2719,6 +2749,10 @@ void CheckBoxes()
         {
             vTaskSuspend(xHandledatetime); // Suspend date time task while fetching data
 
+            // String message = "Please wait while fetching Data";
+            // showMessage(clientLoginStatus, message);
+
+            delay(100);
 			sendReadCommand(LED_RED_ACTIVATION, 0x1);
 			delay(100);
 			String templedRedActivation = tempreadResponse();
@@ -2789,13 +2823,8 @@ void CheckBoxes()
             }
             else
             {
-                resetVP(clientLoginStatus);
-                Serial.println("Please check all boxes");
                 String checkboxStatus = "Please check all boxes";
-                resetVP(clientLoginStatus);
-                String checkboxStatusBytes = toHexString(checkboxStatus);
-                delay(100);
-                writeString(clientLoginStatus, checkboxStatusBytes);
+                showMessage(clientLoginStatus, checkboxStatus);
                 delay(1000);
                 resetVP(clientLoginStatus);
             }
@@ -2812,6 +2841,9 @@ void CheckBoxes()
         else if (checkLastFourDigitsMatch(checkBoxesData, geticonPage3))
         {
             vTaskSuspend(xHandledatetime); // Suspend date time task while fetching data
+
+            // String message = "Please wait while fetching Data";
+            // showMessage(clientLoginStatus, message);
 
 			sendReadCommand(PERMANENT_POWER, 0x1);
 			delay(100);
@@ -2863,13 +2895,8 @@ void CheckBoxes()
             }
             else
             {
-                resetVP(clientLoginStatus);
-                Serial.println("Please check all boxes");
                 String checkboxStatus = "Please check all boxes";
-                resetVP(clientLoginStatus);
-                String checkboxStatusBytes = toHexString(checkboxStatus);
-                delay(100);
-                writeString(clientLoginStatus, checkboxStatusBytes);
+                showMessage(clientLoginStatus, checkboxStatus);
                 delay(1000);
                 resetVP(clientLoginStatus);
             }
@@ -2886,6 +2913,9 @@ void CheckBoxes()
         else if (checkLastFourDigitsMatch(checkBoxesData, geticonPage4))
         {
             vTaskSuspend(xHandledatetime); // Suspend date time task while fetching data
+
+            // String message = "Please wait while fetching Data";
+            // showMessage(clientLoginStatus, message);
 
 			sendReadCommand(UNIT_SECURED, 0x1);
 			delay(100);
@@ -2947,13 +2977,8 @@ void CheckBoxes()
             }
             else
             {
-                resetVP(clientLoginStatus);
-                Serial.println("Please check all boxes");
                 String checkboxStatus = "Please check all boxes";
-                resetVP(clientLoginStatus);
-                String checkboxStatusBytes = toHexString(checkboxStatus);
-                delay(100);
-                writeString(clientLoginStatus, checkboxStatusBytes);
+                showMessage(clientLoginStatus, checkboxStatus);
                 delay(1000);
                 resetVP(clientLoginStatus);
             }
@@ -2971,6 +2996,9 @@ void CheckBoxes()
         else if (checkLastFourDigitsMatch(checkBoxesData, Checklist_Done))
         {
             vTaskSuspend(xHandledatetime); // Suspend date time task while fetching data
+
+            // String message = "Please wait while fetching Data";
+            // showMessage(clientLoginStatus, message);
 
 			sendReadCommand(FYREBOX_UNIT_WIPED_CLEAN, 0x1);
 			delay(100);
@@ -3077,13 +3105,8 @@ void CheckBoxes()
             }
             else
             {
-                resetVP(clientLoginStatus);
-                Serial.println("Please check all boxes");
                 String checkboxStatus = "Please check all boxes";
-                resetVP(clientLoginStatus);
-                String checkboxStatusBytes = toHexString(checkboxStatus);
-                delay(100);
-                writeString(clientLoginStatus, checkboxStatusBytes);
+                showMessage(clientLoginStatus, checkboxStatus);
                 delay(1000);
                 resetVP(clientLoginStatus);
             }
@@ -3397,3 +3420,11 @@ bool RememberIcon(uint16_t rememberLogin)
     }
 }
 
+void showMessage(uint16_t VP_ADDRESS, String displaymessage)
+{
+    resetVP(VP_ADDRESS);
+    Serial.println(displaymessage);
+    String StatusBytes = toHexString(displaymessage);
+    delay(100);
+    writeString(VP_ADDRESS, StatusBytes);
+}

@@ -127,7 +127,7 @@ void setup()
   resetVP(VP_UNIT_CONTACT_DETAILS);
   resetVP(VP_UNIT_IP_ADDRESS);
   resetVP(VP_DEVICE_DRIVER_RETURN_KEY);
-  delay(5);
+  delay(100);
 
   activateSlideShow = true;
 
