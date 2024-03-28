@@ -1204,28 +1204,43 @@ void loginTask(void *parameter)
         // Copyright accepted
         if(containsPattern(checkData, "2e70"))
         {
-            resetVP(CLIENT_SSID);
-            resetVP(CLIENT_PASSWORD);
-            resetVP(CLIENT_PASSWORD_DISPLAY);
-            resetVP(clientLoginStatus);
-            delay(100);
-
-            // Get client info
-            String tempClientusername = preferences.getString("client_username", "");
-            String tempClientpassword = preferences.getString("client_password", "");
-            delay(100);
-
-            Serial.println("Saved client username is: "+ tempClientusername);
-            Serial.println("Saved client password is: "+ tempClientpassword);
-            delay(100);
+            // Get ssid and password of Wi-Fi
+            internetSSID = preferences.getString("internetSSID", "");
+            internetPassword = preferences.getString("internetPass", "");
             
-            String hexdataClientusername = toHexString(tempClientusername);
-            writeString(CLIENT_SSID, hexdataClientusername); // Display client's username
-            delay(100);
+            Serial.println("Saved client username is: "+ internetSSID);
+            Serial.println("Saved client password is: "+ internetPassword);
 
-            readeyeIcon(tempClientpassword, CLIENT_PASSWORD, CLIENT_PASSWORD_ICON, CLIENT_PASSWORD_DISPLAY);
+            //  If ssid and password is available then auto connect
+            if(internetSSID == predefinedInternetSSID && internetPassword == predefinedInternetPassword)
+            {
+                pageSwitch(NOTIFICATION_PAGE);
 
-            pageSwitch(CLIENTPAGE);
+                String message1 = "This is a Notification Screen";
+                showMessage(notificationStatus1, message1);
+                delay(100);
+
+                String message2 = "Connecting to Wi-Fi";
+                showMessage(notificationStatus2, message2);
+
+                delay(5);
+                connectInternet();
+            }
+
+            else
+            {
+                delay(500);
+                pageSwitch(INTERNETPAGE);
+                configureInternet();
+                pageSwitch(NOTIFICATION_PAGE);
+                delay(1000);
+            }
+
+            String message3 = "Logging In";
+            showMessage(notificationStatus3, message3);
+            delay(1000);
+
+            // pageSwitch(UNIQUE_KEY_PAGE);
         }
 
         // Switch user show admin
@@ -1346,7 +1361,7 @@ void loginTask(void *parameter)
         }
 
         // Client Login Mode
-        if (clientLogin)
+        if (clientLogin && wifiConnectedFlag)
         {
             Serial.println("Client Login Mode");
             delay(100);
@@ -1378,29 +1393,6 @@ void loginTask(void *parameter)
                 delay(1000);
                 resetVP(clientLoginStatus);
                 
-                /*Auto fill Network details*/
-                resetVP(INTERNET_SSID);
-                resetVP(INTERNET_PASSWORD);
-                resetVP(INTERNET_PASSWORD_DISPLAY);
-
-                // Get ssid and pass info
-                String internetSSID = preferences.getString("internetSSID", "");
-                String internetPass = preferences.getString("internetPass", "");
-                
-                Serial.println("Saved client username is: "+ internetSSID);
-                Serial.println("Saved client password is: "+ internetPass);
-                
-                delay(100);
-                String hexdataClientusername = toHexString(internetSSID);
-                writeString(INTERNET_SSID, hexdataClientusername); // Display SSID
-                delay(100);
-                
-                readeyeIcon(internetPass, INTERNET_PASSWORD, INTERNET_PASSWORD_ICON, INTERNET_PASSWORD_DISPLAY);
-
-                pageSwitch(INTERNETPAGE);
-                delay(5);
-                checkInternet();
-                delay(5);
                 pageSwitch(UNIQUE_KEY_PAGE);
 
                 while (true)
@@ -1466,7 +1458,7 @@ void loginTask(void *parameter)
         }
 
         // Admin Login Mode
-        else if (adminLogin)
+        else if (adminLogin && wifiConnectedFlag)
         {
             Serial.println("Admin Login Mode");
             delay(100);
@@ -1498,29 +1490,6 @@ void loginTask(void *parameter)
                 delay(1000);
                 resetVP(adminLoginStatus);
 
-                /*Auto fill Network details*/
-                resetVP(INTERNET_SSID);
-                resetVP(INTERNET_PASSWORD);
-                resetVP(INTERNET_PASSWORD_DISPLAY);
-
-                // Get ssid and pass info
-                String internetSSID = preferences.getString("internetSSID", "");
-                String internetPass = preferences.getString("internetPass", "");
-                
-                Serial.println("Saved client username is: "+ internetSSID);
-                Serial.println("Saved client password is: "+ internetPass);
-                
-                delay(100);
-                String hexdataClientusername = toHexString(internetSSID);
-                writeString(INTERNET_SSID, hexdataClientusername); // Display SSID
-                delay(100);
-
-                readeyeIcon(internetPass, INTERNET_PASSWORD, INTERNET_PASSWORD_ICON, INTERNET_PASSWORD_DISPLAY);
-
-                pageSwitch(INTERNETPAGE);
-                delay(5);
-                checkInternet();
-                delay(5);
                 pageSwitch(UNIQUE_KEY_PAGE);
 
                 while (true)
@@ -1634,32 +1603,23 @@ void readeyeIcon(String temppassword, uint16_t passwordvp, uint16_t passwordIcon
     }
 }
 
-void checkInternet()
+void connectInternet()
 {
-    Serial.println("CheckInternet Started"); 
+    Serial.println("connectInternet Started"); 
 
     while(true)
     {
         String internetData = tempreadResponse();
-        Serial.println("Data in check internet:" + internetData);
+        Serial.println("Data in connect internet:" + internetData);
         delay(100);
 
         /*Start of Auto connect*/
         internetSSID = preferences.getString("internetSSID", "");
         internetPassword = preferences.getString("internetPass", "");
-        
-        // Only for testing 
-        // Serial.println("Saved SSID: "+ internetSSID);
-        // Serial.println("Saved Password: "+ internetPassword);
-        // delay(100);
 
-        // if credentials are available and connect button is pressed
-        if ((!internetSSID.isEmpty() && !internetPassword.isEmpty()) && containsPattern(internetData, "345f"))
+        // if credentials are available
+        if ((!internetSSID.isEmpty() && !internetPassword.isEmpty()))
         {
-            String InternetStatus = "Connecting to WiFi";
-            Serial.println(InternetStatus);
-            showMessage(clientLoginStatus , InternetStatus);
-
             WiFi.begin(internetSSID.c_str(), internetPassword.c_str());
 
             unsigned long startAttemptTime = millis();
@@ -1672,13 +1632,10 @@ void checkInternet()
                     isConnected = true;
                     Serial.println("WiFi Connected");
                     String InternetLoginStatus = "Wifi Connected";
-                    resetVP(clientLoginStatus);
-                    String InternetLoginStatusBytes = toHexString(InternetLoginStatus);
-                    delay(100);
-                    writeString(clientLoginStatus, InternetLoginStatusBytes);
-                    delay(1000);
-                    resetVP(clientLoginStatus);
+
+                    showMessage(notificationStatus2, InternetLoginStatus);
                     wifiConnectedFlag = true;
+
                     break;
                 }
             }
@@ -1696,42 +1653,52 @@ void checkInternet()
                 resetVP(INTERNET_PASSWORD_DISPLAY);
                 // resetVP(INTERNET_PASSWORD_ICON);
                 resetVP(INTERNET_CONNECT_BUTTON);
-                Serial.println("Failed to connect to WiFi within 30 seconds.");
+
                 String InternetLoginStatus = "Wifi Not Connected";
-                resetVP(clientLoginStatus);
-                String InternetLoginStatusBytes = toHexString(InternetLoginStatus);
-                delay(100);
-                writeString(clientLoginStatus, InternetLoginStatusBytes);
+                Serial.println("Failed to connect to WiFi within 30 seconds.");
+
+                showMessage(notificationStatus2, InternetLoginStatus);
             }
         }
+    }
+    Serial.println("connectInternet Completed"); 
+}
 
-        /*End of Auto connect*/
-        
-        else if (containsPattern(internetData, "ffff"))
+void configureInternet()
+{
+    Serial.println("configureInternet Started"); 
+
+    while(true)
+    {
+        String configure_internetData = tempreadResponse();
+        Serial.println("Data in configure internet:" + configure_internetData);
+        delay(100);
+
+        if (containsPattern(configure_internetData, "ffff"))
         {
-            Serial.println("Data VP Address :" + internetData);
+            Serial.println("Data VP Address :" + configure_internetData);
             resetVP(INTERNET_PASSWORD_DISPLAY);
             delay(100);
 
-            String vpAddress = processFourthAndFifthBytes(internetData);
+            String vpAddress = processFourthAndFifthBytes(configure_internetData);
             Serial.println("Vp Address Internet :" + vpAddress);
 
             if (vpAddress == "33fa")
             {
                 delay(100);
-                startCheckingPassword(INTERNET_PASSWORD_DISPLAY, INTERNET_PASSWORD_ICON, internetData);
+                startCheckingPassword(INTERNET_PASSWORD_DISPLAY, INTERNET_PASSWORD_ICON, configure_internetData);
             }
         }
 
         //  Check Icon
-        else if (containsPattern(internetData, "345e"))
+        else if (containsPattern(configure_internetData, "345e"))
         {
             Serial.println("In Wi-Fi icon");
             delay(100);
             processPasswordDisplay(INTERNET_PASSWORD, INTERNET_PASSWORD_DISPLAY, INTERNET_PASSWORD_ICON);
         }
-
-        else if (containsPattern(internetData, "345f"))
+        
+        else if (containsPattern(configure_internetData, "345f"))
         {
             delay(100);
             processWiFiCredentials(INTERNET_SSID, INTERNET_PASSWORD, INTERNET_PASSWORD_DISPLAY, INTERNET_PASSWORD_ICON);
@@ -1756,21 +1723,22 @@ void checkInternet()
                     if (WiFi.status() == WL_CONNECTED)
                     {
                         isConnected = true;
-                        Serial.println("WiFi Connected");
                         String InternetLoginStatus = "Wifi Connected";
+                        Serial.println(InternetLoginStatus);
                         resetVP(clientLoginStatus);
-                        String InternetLoginStatusBytes = toHexString(InternetLoginStatus);
-                        delay(100);
-                        writeString(clientLoginStatus, InternetLoginStatusBytes);
-                        delay(1000);
-                        resetVP(clientLoginStatus);
+
+                        showMessage(clientLoginStatus, InternetLoginStatus);
+                        delay(500);
+                        showMessage(notificationStatus2, InternetLoginStatus);
+                        
                         wifiConnectedFlag = true;
                         break;
                     }
                     delay(500);
-                    Serial.println("Connecting to WiFi...");
                     String InternetLoginStatus = "Connecting to WiFi...";
+                    Serial.println(InternetLoginStatus);
                     resetVP(clientLoginStatus);
+
                     String InternetLoginStatusBytes = toHexString(InternetLoginStatus);
                     delay(100);
                     writeString(clientLoginStatus, InternetLoginStatusBytes);
@@ -1802,7 +1770,7 @@ void checkInternet()
             }
         }
     }
-    Serial.println("CheckInternet Completed"); 
+    Serial.println("configureInternet Completed"); 
 }
 
 void configuredeviceTask(void *parameter)
@@ -3428,3 +3396,4 @@ void showMessage(uint16_t VP_ADDRESS, String displaymessage)
     delay(100);
     writeString(VP_ADDRESS, StatusBytes);
 }
+

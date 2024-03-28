@@ -141,6 +141,10 @@ const int CLIENT_REMEMBER_LOGIN = 0x31c9;
 
 const int clientLoginStatus = 0x3000;
 const int adminLoginStatus = 0x3000;
+const int notificationStatus1 = 0x290c;
+const int notificationStatus2 = 0x2a0c;
+const int notificationStatus3 = 0x2b0c;
+const int notificationStatus4 = 0x2c0c;
 
 const int ADMIN_SSID = 0x32CB;
 const int ADMIN_PASSWORD = 0x332F;
@@ -459,6 +463,7 @@ const int CHECKLISTPAGE4 = 0x001E;
 const int CHECKLISTPAGE5 = 0x001F;
 const int SHOW_REPORT_PAGE = 0x0020;
 const int MENU_PAGE = 0x0025;
+const int NOTIFICATION_PAGE = 0x0018;
 
 // Flags
 bool clientLogin = false;

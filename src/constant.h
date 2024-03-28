@@ -143,6 +143,10 @@ extern const int COPYRIGHT;
 extern const int checkboxVP;
 extern const int clientLoginStatus;
 extern const int adminLoginStatus;
+extern const int notificationStatus1;
+extern const int notificationStatus2;
+extern const int notificationStatus3;
+extern const int notificationStatus4;
 
 extern const int CLIENT_PASSWORD_DISPLAY;
 extern const int CLIENT_PASSWORD_ICON;
@@ -222,6 +226,7 @@ extern const int CHECKLISTPAGE4;
 extern const int CHECKLISTPAGE5;
 extern const int CLIENTPAGE;
 extern const int ADMINPAGE;
+extern const int NOTIFICATION_PAGE;
 
 extern const int VP_UNIT_DATE;
 extern const int VP_UNIT_TIME;

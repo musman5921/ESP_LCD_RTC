@@ -127,6 +127,10 @@ void setup()
   resetVP(VP_UNIT_CONTACT_DETAILS);
   resetVP(VP_UNIT_IP_ADDRESS);
   resetVP(VP_DEVICE_DRIVER_RETURN_KEY);
+  resetVP(notificationStatus1);
+  resetVP(notificationStatus2);
+  resetVP(notificationStatus3);
+  resetVP(notificationStatus4);
   delay(100);
 
   activateSlideShow = true;
@@ -147,6 +151,9 @@ void setup()
   // Only for testing of checklists data entery
   EEPROM.write(EEPROMAddress, 0);
   EEPROM.commit(); // Commit changes
+
+  // preferences.putString("internetSSID", " ");
+  // preferences.putString("internetPass", " ");
 }
 
 // Run Code in Loop
