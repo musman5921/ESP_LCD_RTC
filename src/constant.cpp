@@ -40,7 +40,7 @@ int weekByMonth = 0;
 int weekByYear = 0;
 
 // Predefined Credentials
-const String predefinedSSID = "abc";
+const String predefinedusername = "abc";
 const String predefinedPassword = "abc123";
 
 // Defined Values
@@ -129,6 +129,10 @@ const String previousONpage5 = "110a";
 const String Home_Screen_Back = "1101";
 const String Home_Screen = "1102";
 
+// Menu functions return key codes
+const String batteryCalc = "1107";
+const String logout = "110b";
+
 const int RESET = 0x0;
 
 // Define the VP Addresses
@@ -210,6 +214,7 @@ const int self_Test = 0x6216;
 const int checklists = 0x6217;
 const int start_SlideShow = 0x6218;
 
+
 // Check Boxes Memory Variables
 String controlFunction = "";
 String speakerActivate = "";
@@ -237,17 +242,6 @@ String anyDamageBox = "";
 String anyRustUnit = "";
 String checkBoxesDonePressed = "3";
 
-// Menu Memory Variables
-String showBoxesDonePressed = "055";
-String returnKeycode_report = "056";
-String returnKeycode_checklist = "057";
-String startSlideshow = "058";
-String stopSlideshow = "059";
-String returnKeycode_showMenu = "060";
-String returnKeycode_hideMenu = "061";
-String returnKeycode_uploadPDF = "062";
-String returnKeycode_batteryCalc = "066";
-
 // Check Boxes VP Addresses
 const int CONTROL_FUNCTION = 0x5000;
 const int SPEAKER_ACTIVATE = 0x5001;
@@ -273,12 +267,6 @@ const int LOGBOOK_UPTODATE = 0x5014;
 const int FYREBOX_UNIT_WIPED_CLEAN = 0x5015;
 const int ANY_DAMAGE_BOX = 0x5016;
 const int ANY_RUST_UNIT = 0x5017;
-
-// Menu functions VP Addresses of return key code
-const int showMenuVP = 0x6221;
-const int hideMenuVP = 0x6221;
-const int uploadPDF_VP = 0x6221;
-const int batteryCalc_VP = 0x6221;
 
 // Check Boxes VP Addresses of Basic Graphic	
 const int basicGraphic_page1 = 0x5100;

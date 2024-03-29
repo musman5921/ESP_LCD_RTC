@@ -47,7 +47,7 @@ extern int weekByMonth;
 extern int weekByYear;
 
 // Predefined Credentials
-extern const String predefinedSSID;
+extern const String predefinedusername;
 extern const String predefinedPassword;
 
 // Defined Values
@@ -126,7 +126,8 @@ extern const String previousONpage5;
 extern const String Home_Screen_Back;
 extern const String Home_Screen;
 
-
+extern const String batteryCalc;
+extern const String logout;
 
 extern unsigned char Buffer[10];
 extern const int RESET;
@@ -266,18 +267,6 @@ extern String LogbookUptodate;
 extern String fyreboxUnitWipedCleaned;
 extern String anyDamageBox;
 extern String anyRustUnit;
-
-// Menu Strings
-extern String checkBoxesDonePressed;
-extern String showBoxesDonePressed;
-extern String returnKeycode_report;
-extern String returnKeycode_checklist;
-extern String startSlideshow;
-extern String stopSlideshow;
-extern String returnKeycode_showMenu;
-extern String returnKeycode_hideMenu;
-extern String returnKeycode_uploadPDF;
-extern String returnKeycode_batteryCalc;
 
 // Check Boxes VP Addresses
 extern const int CONTROL_FUNCTION;

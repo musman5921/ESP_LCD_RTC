@@ -545,7 +545,7 @@ Credentials retrieveCredentials(uint16_t ssidCommand, uint16_t passwordCommand, 
 void processClientLogin(uint16_t username, uint16_t passwordCommand, uint16_t passwordDisplay, uint16_t passwordIcon)
 {
     // Read Username
-    Serial.println("In processClient_Login");
+    Serial.println("In processClientLogin");
 
     sendReadCommand(username, 0x28);
     delay(100);
@@ -571,9 +571,6 @@ void processClientLogin(uint16_t username, uint16_t passwordCommand, uint16_t pa
         String password = preferences.getString("client_password", "");
         Serial.println("password: " + password);
         delay(100);
-        int passwordlength = password.length();
-        Serial.println("password length: ");
-        Serial.print(passwordlength);
     }
     
 }
@@ -732,7 +729,7 @@ void systemReset()
 // Compare String
 bool compareCredentials(String ssid, String password)
 {
-    return ssid == predefinedSSID && password == predefinedPassword;
+    return ssid == predefinedusername && password == predefinedPassword;
 }
 
 // Compare Internet
@@ -1240,7 +1237,62 @@ void loginTask(void *parameter)
             showMessage(notificationStatus3, message3);
             delay(1000);
 
-            // pageSwitch(UNIQUE_KEY_PAGE);
+            rememberClient = true;
+
+            if (rememberClient)
+            {
+                // Get client info for auto login
+                String tempClientusername = preferences.getString("client_username", "");
+                String tempClientpassword = preferences.getString("client_password", "");
+                delay(100);
+
+                Serial.println("Saved client username is: "+ tempClientusername);
+                Serial.println("Saved client password is: "+ tempClientpassword);
+
+                // If username and password is available then auto connect
+                if(tempClientusername == predefinedusername && tempClientpassword == predefinedPassword)
+                {
+                    message3 = "Login Success";
+                    showMessage(notificationStatus3, message3);
+                    delay(1000);
+                }
+                else
+                {
+                    message3 = "Login Fail"; // Wait here and get login credentials again
+                    showMessage(notificationStatus3, message3);
+                    delay(1000);
+                }
+            }
+
+            else
+            {
+                message3 = "Remember Client is not true"; 
+                showMessage(notificationStatus3, message3);
+                delay(1000);
+            }
+
+            delay(100);
+            String uniqueData = readOneData(UNIQUE_KEY);
+            delay(100);
+            storedUniqueData = uniqueData;
+
+            if (storedUniqueData == uniqueData)
+            {
+                String message4 = "Start Slide Show";
+                showMessage(notificationStatus4, message4);
+                delay(1000);
+                uniqueKeyFlag = true;
+            }
+
+            delay(1000);
+
+            // Start slideShow
+            slideShowFlag = true;
+            slideShow();
+
+            Serial.println("Start Home page Tasks");
+            vTaskResume(xHandlehomepage); // Resume the next task before exit
+            break;
         }
 
         // Switch user show admin
@@ -1565,8 +1617,8 @@ void loginTask(void *parameter)
     }
 
     Serial.println("Login Task completed");   
-    Serial.println("Login Task Deleted");
-    vTaskDelete(xHandlelogin); // Delete the task
+    Serial.println("Login Task Suspended");
+    vTaskSuspend(xHandlelogin); // Suspend the task
 }
 
 void readeyeIcon(String temppassword, uint16_t passwordvp, uint16_t passwordIcon, uint16_t passwordDisplay)
@@ -1778,7 +1830,7 @@ void configuredeviceTask(void *parameter)
     Serial.println("configuredeviceTask Started");
 
     while(true)
-    {
+    {   
         DynamicJsonDocument doc(1024);
         Serial.println("In Device Configuration");
         delay(100);
@@ -2482,7 +2534,7 @@ void homepageTasks(void *parameter)
         Serial.println("Data in homepageTasks:" +checkData);
         delay(100);
 
-        // Show/Hide Menu
+        // Show/Hide Menu & select between Menu functions
         if (containsPattern(checkData, "6211"))
         {
             Serial.println("Data from home screen menu");
@@ -2499,6 +2551,31 @@ void homepageTasks(void *parameter)
                 pageSwitch(HOME_PAGE);
                 Serial.println("Page Switched");
                 delay(5);
+            }
+
+            else if (containsPattern(checkData, batteryCalc))
+            {
+                // pageSwitch(HOME_PAGE);
+                // Serial.println("Page Switched");
+                delay(5);
+            }
+
+            // Handle Logout 
+            else if (containsPattern(checkData, logout))
+            {
+                pageSwitch(CLIENTPAGE);
+                Serial.println("Page Switched");
+                delay(5);
+
+                Serial.println("Suspend date time Task");
+                vTaskSuspend(xHandledatetime); 
+                delay(100);
+
+                Serial.println("Start login Task");
+                vTaskResume(xHandlelogin); // Resume the next task before exit
+                delay(100);
+                
+                break;
             }
         }
 
@@ -2600,8 +2677,8 @@ void homepageTasks(void *parameter)
     }
 
     Serial.println("homepageTasks completed");
-    // Serial.println("homepageTasks deleted");
-    // vTaskDelete(xHandlehomepage); // Delete the task
+    Serial.println("homepageTasks Suspended");
+    vTaskSuspend(xHandlehomepage); // Suspend the task
 }
 
 void CheckBoxes()
