@@ -154,6 +154,9 @@ void setup()
 
   // preferences.putString("internetSSID", " ");
   // preferences.putString("internetPass", " ");
+
+  removeClientCredentials();
+  // removeAdminCredentials();
 }
 
 // Run Code in Loop

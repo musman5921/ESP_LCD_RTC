@@ -92,7 +92,12 @@ const String hidePassword = "102";
 
 const String companyDoneButtonYes = "1101";
 const String companyDoneButtonNo = "1102";
-const String Data_Uploading = "1101";
+
+const String companyDetails_page1_next = "1101";
+const String companyDetails_page2_next = "1102";
+const String companyDetails_page2_back = "1103";
+const String companyDetails_page3_next = "1104";
+const String companyDetails_page3_back = "1105";
 
 const String Manufacturing_Details_Upload = "1101";
 const String Manufacturing_Details_Back = "1102";
@@ -192,7 +197,7 @@ const int VP_MANUFACTURE_DATE = 0x3dc3;
 const int VP_MANUFACTURE_SERIAL_N0 = 0x3e27;
 
 const int VP_UNIT_DONE = 0x3a3e;
-const int VP_LOCATION_OF_UNIT = 0x3a3f;
+const int VP_LOCATION_OF_UNIT = 0x3a8f;
 const int VP_ASSIGNED_UNIT_NUMBER = 0x3aa3;
 const int VP_DATE_OF_UNIT_INSTALLATION = 0x3b07;
 const int VP_UNIT_INSTALLER = 0x3b6b;

@@ -1261,6 +1261,8 @@ void loginTask(void *parameter)
                     message3 = "Login Fail"; // Wait here and get login credentials again
                     showMessage(notificationStatus3, message3);
                     delay(1000);
+
+                    pageSwitch(CLIENTPAGE);
                 }
             }
 
@@ -1274,16 +1276,17 @@ void loginTask(void *parameter)
             delay(100);
             String uniqueData = readOneData(UNIQUE_KEY);
             delay(100);
+            
             storedUniqueData = uniqueData;
 
             if (storedUniqueData == uniqueData)
             {
-                String message4 = "Start Slide Show";
+                String message4 = "Start Slide Show after unique key";
                 showMessage(notificationStatus4, message4);
                 delay(1000);
-                uniqueKeyFlag = true;
+                // uniqueKeyFlag = true;
             }
-
+            /*
             delay(1000);
 
             // Start slideShow
@@ -1293,6 +1296,7 @@ void loginTask(void *parameter)
             Serial.println("Start Home page Tasks");
             vTaskResume(xHandlehomepage); // Resume the next task before exit
             break;
+            */
         }
 
         // Switch user show admin
@@ -1984,12 +1988,9 @@ void companyDetails()
         String companyDetails = tempreadResponse();
         Serial.println("Company Details: " + companyDetails);
         
-        if(containsPattern(companyDetails, Data_Uploading))
+        if(containsPattern(companyDetails, companyDetails_page1_next))
         {
             vTaskSuspend(xHandledatetime); // Suspend date time task while fetching data
-            
-            // String message = "Please wait while fetching Data";
-            // showMessage(clientLoginStatus, message);
 
             delay(100);
             sendReadCommand(VP_COMPANY_NAME, 0x28);
@@ -2052,6 +2053,28 @@ void companyDetails()
             Serial.println("Key Responsible Person1 Contact: " + keyResponsiblePerson1Contact);
             delay(100);
 
+            if((companyName == "") || (companyAddress == "") || (keyResponsiblePersonName == "") 
+            || (keyResponsiblePersonContact == "") || (keyResponsiblePerson1Name == "") || (keyResponsiblePerson1Contact == ""))
+            {
+                String Status = "Please Enter Details";
+                showMessage(clientLoginStatus, Status);
+                delay(1000);
+                resetVP(clientLoginStatus);
+
+                vTaskResume(xHandledatetime); // Resume date time task after data is fetched
+            }
+            else
+            {
+                pageSwitch(COMPANY_DETAILS_PAGE2);
+                Serial.println("Page Switched");
+                delay(5);
+            }
+        }
+
+        else if(containsPattern(companyDetails, companyDetails_page2_next))
+        {
+            vTaskSuspend(xHandledatetime); // Suspend date time task while fetching data
+
             sendReadCommand(VP_KEY_RESPONSIBLE_PERSON2_NAME, 0x28);
             delay(100);
             String tempkeyResponsiblePerson2Name = tempreadResponse();
@@ -2070,6 +2093,7 @@ void companyDetails()
             String pc2extractedData = extractDataBeforeMarker(pc2emoverHeaders, "ffff");
             keyResponsiblePerson2Contact = hexToString(pc2extractedData);
             Serial.println("Key Responsible Person2 Contact: " + keyResponsiblePerson2Contact);
+            delay(100);
 
             sendReadCommand(VP_KEY_RESPONSIBLE_PERSON3_NAME, 0x28);
             delay(100);
@@ -2089,6 +2113,35 @@ void companyDetails()
             String pc3extractedData = extractDataBeforeMarker(pc3emoverHeaders, "ffff");
             keyResponsiblePerson3Contact = hexToString(pc3extractedData);
             Serial.println("Key Responsible Person3 Contact: " + keyResponsiblePerson3Contact);
+            delay(100);
+
+            if((keyResponsiblePerson2Name == "") || (keyResponsiblePerson2Contact == "") || (keyResponsiblePerson3Name == "") || (keyResponsiblePerson3Contact == ""))
+            {
+                String Status = "Please Enter Details";
+                showMessage(clientLoginStatus, Status);
+                delay(1000);
+                resetVP(clientLoginStatus);
+
+                vTaskResume(xHandledatetime); // Resume date time task after data is fetched
+            }
+            else
+            {
+                pageSwitch(COMPANY_DETAILS_PAGE3);
+                Serial.println("Page Switched");
+                delay(5);
+            }
+        }
+
+        else if(containsPattern(companyDetails, companyDetails_page2_back))
+        {
+            pageSwitch(COMPANY_DETAILS_PAGE1);
+            Serial.println("Page Switched");
+            delay(5);
+        }
+
+        else if(containsPattern(companyDetails, companyDetails_page3_next))
+        {
+            vTaskSuspend(xHandledatetime); // Suspend date time task while fetching data
 
             sendReadCommand(VP_KEY_RESPONSIBLE_PERSON4_NAME, 0x28);
             delay(100);
@@ -2096,7 +2149,7 @@ void companyDetails()
             delay(100);
             String pn4emoverHeaders = removeFirst7Bytes(tempkeyResponsiblePerson4Name);
             String pn4extractedData = extractDataBeforeMarker(pn4emoverHeaders, "ffff");
-            keyResponsiblePerson4Name = hexToString(pn2extractedData);
+            keyResponsiblePerson4Name = hexToString(pn4extractedData);
             Serial.println("Key Responsible Person4 Name: " + keyResponsiblePerson4Name);
             delay(100);
 
@@ -2128,17 +2181,34 @@ void companyDetails()
             String lfcextractedData = extractDataBeforeMarker(lfcremoverHeaders, "ffff");
             localFireDepartmentContact = hexToString(lfcextractedData);
             Serial.println("Local Fire Department Contact: " + localFireDepartmentContact);
-            companyDetailsFlag = true;
+            delay(100);
 
-            resetVP(clientLoginStatus);
+            if((keyResponsiblePerson4Name == "") || (keyResponsiblePerson4Contact == "") || (localFireDepartmentName == "") || (localFireDepartmentContact == ""))
+            {
+                String Status = "Please Enter Details";
+                showMessage(clientLoginStatus, Status);
+                delay(1000);
+                resetVP(clientLoginStatus);
 
-            vTaskResume(xHandledatetime); // Resume date time task after data is fetched
+                vTaskResume(xHandledatetime); // Resume date time task after data is fetched
+            }
+            else
+            {
+                companyDetailsFlag = true;
+            }
+        }
+
+        else if(containsPattern(companyDetails, companyDetails_page3_back))
+        {
+            pageSwitch(COMPANY_DETAILS_PAGE2);
+            Serial.println("Page Switched");
+            delay(5);
         }
 
         if (companyDetailsFlag)
             break;
-    }
 
+    }
     if(companyDetailsFlag)
     {
         companyDetailsFlag = false;
@@ -2146,6 +2216,7 @@ void companyDetails()
         delay(5);
         manufactureDetails();
     }
+    
     Serial.println("companyDetails completed");
 }
 
@@ -2165,9 +2236,6 @@ void manufactureDetails()
         if(containsPattern(manufacturerDetails, Manufacturing_Details_Upload))
         {
             vTaskSuspend(xHandledatetime); // Suspend date time task while fetching data
-
-            // String message = "Please wait while fetching Data";
-            // showMessage(clientLoginStatus, message);
 
             delay(100);
             sendReadCommand(VP_MANUFACTURE_NAME, 0x28);
@@ -2218,11 +2286,20 @@ void manufactureDetails()
             String sncextractedData = extractDataBeforeMarker(snremoverHeaders, "ffff");
             serialNumber = hexToString(sncextractedData);
             Serial.println("Manufacturer Serial No: " + serialNumber);
-            companyManufacturerDetails = true;
 
-            resetVP(clientLoginStatus);
-            
-            vTaskResume(xHandledatetime); // Resume date time task after data is fetched
+            if((manufacturerName == "") || (manufacturerContact == "") || (manufacturerEmail == "") || (dateOfManufacture == "") || (serialNumber == ""))
+            {
+                String Status = "Please Enter Details";
+                showMessage(clientLoginStatus, Status);
+                delay(1000);
+                resetVP(clientLoginStatus);
+
+                vTaskResume(xHandledatetime); // Resume date time task after data is fetched
+            }
+            else
+            {
+                companyManufacturerDetails = true;
+            }
         }
 
         if (companyManufacturerDetails)
@@ -2270,9 +2347,6 @@ void unitDetails()
         if (containsPattern(unitDetails, Unit_Details_Upload))
         {
             vTaskSuspend(xHandledatetime); // Suspend date time task while fetching data
-
-            // String message = "Please wait while fetching Data";
-            // showMessage(clientLoginStatus, message);
 
             delay(100);
             sendReadCommand(VP_LOCATION_OF_UNIT, 0x28);
@@ -2327,17 +2401,26 @@ void unitDetails()
             delay(100);
             sendReadCommand(VP_UNIT_IP_ADDRESS, 0x28);
             delay(100);
-            String ipAddress = tempreadResponse();
+            String tempipAddress = tempreadResponse();
             delay(100);
-            String ipremoverHeaders = removeFirst7Bytes(tempunitContactDetails);
+            String ipremoverHeaders = removeFirst7Bytes(tempipAddress);
             String ipdcextractedData = extractDataBeforeMarker(ipremoverHeaders, "ffff");
             ipAddress = hexToString(ipdcextractedData);
             Serial.println("Unit IP Address: " + ipAddress);
-            UnitDetailsFlag = true;
 
-            resetVP(clientLoginStatus);
+            if((locationOfUnit == "") || (assignedUnitNumber == "") || (dateOfUnitInstallation == "") || (unitInstaller == "") || (unitContactDetails == "") || (ipAddress == ""))
+            {
+                String Status = "Please Enter Details";
+                showMessage(clientLoginStatus, Status);
+                delay(1000);
+                resetVP(clientLoginStatus);
 
-            vTaskResume(xHandledatetime); // Resume date time task after data is fetched
+                vTaskResume(xHandledatetime); // Resume date time task after data is fetched
+            }
+            else
+            {
+                UnitDetailsFlag = true;
+            }
         }
 
         if (UnitDetailsFlag)

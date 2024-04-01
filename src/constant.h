@@ -77,7 +77,12 @@ extern String keyResponsiblePerson4Name;
 extern String keyResponsiblePerson4Contact;
 extern String localFireDepartmentName;
 extern String localFireDepartmentContact;
-extern const String Data_Uploading;
+
+extern const String companyDetails_page1_next;
+extern const String companyDetails_page2_next;
+extern const String companyDetails_page2_back;
+extern const String companyDetails_page3_next;
+extern const String companyDetails_page3_back;
 
 extern const int COMPANY_MANUFACTURE_DETAILS;
 extern const String Manufacturing_Details_Upload;
