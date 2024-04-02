@@ -1182,7 +1182,8 @@ void dateTimeTask(void *parameter)
     vTaskDelete(xHandledatetime); // Delete the task if it ever breaks out of the loop 
 }
 
-void loginTask(void *parameter)
+// Handles login of Client and Admin Panel
+void loginTask()
 {
     Serial.println("Login Task Started");
 
@@ -1190,13 +1191,13 @@ void loginTask(void *parameter)
     {
         checkData = tempreadResponse();
 
-        // Ack response from lcd
+        // Unwanted Ack response from lcd
         if(checkData == "5aa53824f4b")
         {
             checkData = "";
         }
 
-        Serial.println("Data in loginTask:" +checkData);
+        Serial.println("Data in loginTask: " + checkData);
 
         // Copyright accepted
         if(containsPattern(checkData, "2e70"))
@@ -1284,19 +1285,17 @@ void loginTask(void *parameter)
                 String message4 = "Start Slide Show after unique key";
                 showMessage(notificationStatus4, message4);
                 delay(1000);
-                // uniqueKeyFlag = true;
+                uniqueKeyFlag = true;
             }
-            /*
+            
             delay(1000);
 
             // Start slideShow
             slideShowFlag = true;
             slideShow();
-
-            Serial.println("Start Home page Tasks");
-            vTaskResume(xHandlehomepage); // Resume the next task before exit
+            
             break;
-            */
+            
         }
 
         // Switch user show admin
@@ -1612,8 +1611,6 @@ void loginTask(void *parameter)
 
         if(uniqueKeyFlag)
         {
-            Serial.println("Start Config Device");
-            vTaskResume(xHandleconfigdevice); // Resume the next task before exit
             break;
         }
 
@@ -1621,8 +1618,7 @@ void loginTask(void *parameter)
     }
 
     Serial.println("Login Task completed");   
-    Serial.println("Login Task Suspended");
-    vTaskSuspend(xHandlelogin); // Suspend the task
+    configuredeviceTask();
 }
 
 void readeyeIcon(String temppassword, uint16_t passwordvp, uint16_t passwordIcon, uint16_t passwordDisplay)
@@ -1829,7 +1825,7 @@ void configureInternet()
     Serial.println("configureInternet Completed"); 
 }
 
-void configuredeviceTask(void *parameter)
+void configuredeviceTask()
 {
     Serial.println("configuredeviceTask Started");
 
@@ -1964,15 +1960,14 @@ void configuredeviceTask(void *parameter)
 
         if(ConfigureDeviceFlag)
         {
-            Serial.println("Start hompageTasks");
-            vTaskResume(xHandlehomepage); // Resume the next task before exit
             break;
         }
+
         delay(100);
     }
+
     Serial.println("configuredeviceTask completed");
-    Serial.println("configuredeviceTask deleted");
-    vTaskDelete(xHandleconfigdevice); // Delete the task
+    homepageTasks();
 }
 
 void companyDetails()
@@ -2598,15 +2593,12 @@ void slideShow()
     Serial.println("slideShow completed");
 }
 
-void homepageTasks(void *parameter)
+void homepageTasks()
 {
     Serial.println("homepageTasks Started");
 
     while(true)
     {
-        // Reset the last activity time
-        lastActivityTime = millis();
-
         checkData = tempreadResponse();
 
         // unwanted lcd response
@@ -2620,6 +2612,9 @@ void homepageTasks(void *parameter)
         // Show/Hide Menu & select between Menu functions
         if (containsPattern(checkData, "6211"))
         {
+            // Reset the last activity time
+            lastActivityTime = millis();
+            
             Serial.println("Data from home screen menu");
 
             if (containsPattern(checkData, Home_Screen_Menu))
@@ -2654,8 +2649,8 @@ void homepageTasks(void *parameter)
                 vTaskSuspend(xHandledatetime); 
                 delay(100);
 
-                Serial.println("Start login Task");
-                vTaskResume(xHandlelogin); // Resume the next task before exit
+                // Serial.println("Start login Task");
+                // vTaskResume(xHandlelogin); // Resume the next task before exit
                 delay(100);
                 
                 break;
@@ -2665,6 +2660,9 @@ void homepageTasks(void *parameter)
         // Show Units lists
         else if(containsPattern(checkData, "6214"))
         {
+            // Reset the last activity time
+            lastActivityTime = millis();
+
             pageSwitch(UNITSLISTS_PAGE);
             Serial.println("Page Switched");
             delay(5);
@@ -2673,6 +2671,9 @@ void homepageTasks(void *parameter)
         // Show Report
         else if (containsPattern(checkData, "6215"))
         {
+            // Reset the last activity time
+            lastActivityTime = millis();
+
             Serial.println("Data from home screen report");
 
             if (containsPattern(checkData, Home_Screen_Report))
@@ -2691,6 +2692,9 @@ void homepageTasks(void *parameter)
         // Show Checklist
         else if (containsPattern(checkData, "6217") && !dataEnteredtoday)
         {
+            // Reset the last activity time
+            lastActivityTime = millis();
+
             Serial.println("Data from home screen checklist");
             
             lastDataEntryEEPROM = EEPROM.read(EEPROMAddress);
@@ -2729,12 +2733,18 @@ void homepageTasks(void *parameter)
         // Checklist Data is Received
         else if(containsPattern(checkData, "6217") && dataEnteredtoday)
         {
+            // Reset the last activity time
+            lastActivityTime = millis();
+
             Serial.println("Data is Received, next data will be received in next week");
         }
 
         // Start Slide show
         else if (containsPattern(checkData, "6218")) 
         {
+            // Reset the last activity time
+            lastActivityTime = millis();
+
             activateSlideShow = true;
             Serial.println("Data from home screen back");
 
@@ -2760,8 +2770,8 @@ void homepageTasks(void *parameter)
     }
 
     Serial.println("homepageTasks completed");
-    Serial.println("homepageTasks Suspended");
-    vTaskSuspend(xHandlehomepage); // Suspend the task
+    // Serial.println("homepageTasks Suspended");
+    // vTaskSuspend(xHandlehomepage); // Suspend the task
 }
 
 void CheckBoxes()
