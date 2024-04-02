@@ -2366,7 +2366,7 @@ void unitDetails()
             String auremoverHeaders = removeFirst7Bytes(tempassignedUnitNumber);
             String aucextractedData = extractDataBeforeMarker(auremoverHeaders, "ffff");
             assignedUnitNumber = hexToString(aucextractedData);
-            Serial.println("Assigned Unit: " + assignedUnitNumber);
+            Serial.println("Assigned Unit Number: " + assignedUnitNumber);
 
             delay(100);
             sendReadCommand(VP_DATE_OF_UNIT_INSTALLATION, 0x28);
@@ -2386,7 +2386,7 @@ void unitDetails()
             String uiremoverHeaders = removeFirst7Bytes(tempunitInstaller);
             String uicextractedData = extractDataBeforeMarker(uiremoverHeaders, "ffff");
             unitInstaller = hexToString(uicextractedData);
-            Serial.println("Assigned Unit: " + unitInstaller);
+            Serial.println("Unit Installer: " + unitInstaller);
 
             delay(100);
             sendReadCommand(VP_UNIT_CONTACT_DETAILS, 0x28);
