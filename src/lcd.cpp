@@ -1182,6 +1182,13 @@ void dateTimeTask(void *parameter)
     vTaskDelete(xHandledatetime); // Delete the task if it ever breaks out of the loop 
 }
 
+void configureDevice()
+{
+    loginTask();
+    delay(100);
+    configuredeviceTask();
+}
+
 // Handles login of Client and Admin Panel
 void loginTask()
 {
@@ -1202,100 +1209,9 @@ void loginTask()
         // Copyright accepted
         if(containsPattern(checkData, "2e70"))
         {
-            // Get ssid and password of Wi-Fi
-            internetSSID = preferences.getString("internetSSID", "");
-            internetPassword = preferences.getString("internetPass", "");
-            
-            Serial.println("Saved client username is: "+ internetSSID);
-            Serial.println("Saved client password is: "+ internetPassword);
-
-            //  If ssid and password is available then auto connect
-            if(internetSSID == predefinedInternetSSID && internetPassword == predefinedInternetPassword)
-            {
-                pageSwitch(NOTIFICATION_PAGE);
-
-                String message1 = "This is a Notification Screen";
-                showMessage(notificationStatus1, message1);
-                delay(100);
-
-                String message2 = "Connecting to Wi-Fi";
-                showMessage(notificationStatus2, message2);
-
-                delay(5);
-                connectInternet();
-            }
-
-            else
-            {
-                delay(500);
-                pageSwitch(INTERNETPAGE);
-                configureInternet();
-                pageSwitch(NOTIFICATION_PAGE);
-                delay(1000);
-            }
-
-            String message3 = "Logging In";
-            showMessage(notificationStatus3, message3);
-            delay(1000);
-
-            rememberClient = true;
-
-            if (rememberClient)
-            {
-                // Get client info for auto login
-                String tempClientusername = preferences.getString("client_username", "");
-                String tempClientpassword = preferences.getString("client_password", "");
-                delay(100);
-
-                Serial.println("Saved client username is: "+ tempClientusername);
-                Serial.println("Saved client password is: "+ tempClientpassword);
-
-                // If username and password is available then auto connect
-                if(tempClientusername == predefinedusername && tempClientpassword == predefinedPassword)
-                {
-                    message3 = "Login Success";
-                    showMessage(notificationStatus3, message3);
-                    delay(1000);
-                }
-                else
-                {
-                    message3 = "Login Fail"; // Wait here and get login credentials again
-                    showMessage(notificationStatus3, message3);
-                    delay(1000);
-
-                    pageSwitch(CLIENTPAGE);
-                }
-            }
-
-            else
-            {
-                message3 = "Remember Client is not true"; 
-                showMessage(notificationStatus3, message3);
-                delay(1000);
-            }
-
-            delay(100);
-            String uniqueData = readOneData(UNIQUE_KEY);
-            delay(100);
-            
-            storedUniqueData = uniqueData;
-
-            if (storedUniqueData == uniqueData)
-            {
-                String message4 = "Start Slide Show after unique key";
-                showMessage(notificationStatus4, message4);
-                delay(1000);
-                uniqueKeyFlag = true;
-            }
-            
-            delay(1000);
-
-            // Start slideShow
-            slideShowFlag = true;
-            slideShow();
-            
-            break;
-            
+            pageSwitch(INTERNETPAGE);
+            configureInternet(); 
+            pageSwitch(CLIENTPAGE);
         }
 
         // Switch user show admin
@@ -1618,7 +1534,253 @@ void loginTask()
     }
 
     Serial.println("Login Task completed");   
-    configuredeviceTask();
+    // configuredeviceTask();
+}
+
+void logoutTask()
+{
+    Serial.println("Logout Task Started");
+    logoutFlag = false;
+
+    while(true)
+    {
+        checkData = tempreadResponse();
+
+        // Unwanted Ack response from lcd
+        if(checkData == "5aa53824f4b")
+        {
+            checkData = "";
+        }
+
+        Serial.println("Data in logoutTask: " + checkData);
+
+        pageSwitch(CLIENTPAGE);
+
+        // Switch user show admin
+        if(containsPattern(checkData, switchUser) && containsPattern(checkData, showAdmin)) 
+        {
+            resetVP(ADMIN_SSID);
+            resetVP(ADMIN_PASSWORD);
+            resetVP(ADMIN_PASSWORD_DISPLAY);
+            resetVP(adminLoginStatus);
+            delay(100);
+            
+            // Get Admin info
+            String tempAdminusername = preferences.getString("admin_username", "");
+            String tempAdminpassword = preferences.getString("admin_password", "");
+            delay(100);
+            
+            Serial.println("Saved Admin username is: "+ tempAdminusername);
+            Serial.println("Saved Admin password is: "+ tempAdminpassword);
+            delay(100);
+            
+            String hexdataAdminusername = toHexString(tempAdminusername);
+            writeString(ADMIN_SSID, hexdataAdminusername); // Display Admin's username
+            delay(100);
+
+            readeyeIcon(tempAdminpassword, ADMIN_PASSWORD, ADMIN_PASSWORD_ICON, ADMIN_PASSWORD_DISPLAY);
+
+            pageSwitch(ADMINPAGE);
+        }
+
+        // Switch user show client
+        else if(containsPattern(checkData, switchUser) && containsPattern(checkData, showClient))
+        {
+            resetVP(CLIENT_SSID);
+            resetVP(CLIENT_PASSWORD);
+            resetVP(CLIENT_PASSWORD_DISPLAY);
+            resetVP(clientLoginStatus);
+            delay(100);
+
+            // Get client info
+            String tempClientusername = preferences.getString("client_username", "");
+            String tempClientpassword = preferences.getString("client_password", "");
+            delay(100);
+
+            Serial.println("Saved client username is: "+ tempClientusername);
+            Serial.println("Saved client password is: "+ tempClientpassword);
+            delay(100);
+            
+            String hexdataClientusername = toHexString(tempClientusername);
+            writeString(CLIENT_SSID, hexdataClientusername); // Display client's username
+            delay(100);
+
+            readeyeIcon(tempClientpassword, CLIENT_PASSWORD, CLIENT_PASSWORD_ICON, CLIENT_PASSWORD_DISPLAY);
+
+            pageSwitch(CLIENTPAGE);
+        }
+            
+        // Client panel or admin panel
+        else if (containsPattern(checkData, "ffff"))
+        {
+            resetVP(CLIENT_PASSWORD_DISPLAY);
+            // resetVP(ADMIN_PASSWORD_DISPLAY);
+            delay(100);
+            String vpAddress = processFourthAndFifthBytes(checkData);
+            Serial.println("Vp Address :" + vpAddress);
+            if (vpAddress == "3164")
+            {
+                Serial.println("Client Panel");
+                delay(100);
+                startCheckingPassword(CLIENT_PASSWORD_DISPLAY, CLIENT_PASSWORD_ICON, checkData);
+            }
+            else if (vpAddress == "332f")
+            {
+                Serial.println("Admin Panel");
+                delay(100);
+                startCheckingPassword(ADMIN_PASSWORD_DISPLAY, ADMIN_PASSWORD_ICON, checkData);
+            }
+        }
+
+        // Client password show/hide icons
+        else if (containsPattern(checkData, "31c8"))
+        {
+            Serial.println("In client Icon");
+            delay(100);
+            processPasswordDisplay(CLIENT_PASSWORD, CLIENT_PASSWORD_DISPLAY, CLIENT_PASSWORD_ICON);
+        }
+
+        // Admin password show/hide icons
+        else if (containsPattern(checkData, "3393"))
+        {
+            Serial.println("In admin Icon");
+            delay(100);
+            processPasswordDisplay(ADMIN_PASSWORD, ADMIN_PASSWORD_DISPLAY, ADMIN_PASSWORD_ICON);
+        }
+
+        // Admin/Client login button
+        else if (containsPattern(checkData, "31ca"))
+        {
+            if (checkLastFourDigitsMatch(checkData, clientPanelDigits))
+            {
+                Serial.println("Data from client login button");
+                clientLogin = true;
+
+                if (RememberIcon(CLIENT_REMEMBER_LOGIN))
+                    rememberClient = true;
+                else
+                    rememberClient = false;
+            }
+            else if (checkLastFourDigitsMatch(checkData, adminPanelDigits))
+            {
+                Serial.println("Data from admin login button");
+                adminLogin = true;
+                
+                if (RememberIcon(ADMIN_REMEMBER_LOGIN))
+                    rememberAdmin = true;
+                else
+                    rememberAdmin = false;
+            }
+        }
+
+        // Client Login Mode
+        if (clientLogin && wifiConnectedFlag)
+        {
+            Serial.println("Client Login Mode");
+            delay(100);
+
+            processClientLogin(CLIENT_SSID, CLIENT_PASSWORD, CLIENT_PASSWORD_DISPLAY, CLIENT_PASSWORD_ICON);
+
+            String tempusernameClient = preferences.getString("client_username", "");
+            String temppasswordClient = preferences.getString("client_password", "");
+            
+            Serial.println("Saved username for client login: "+ tempusernameClient);
+            Serial.println("Saved password for client login: "+ temppasswordClient);
+            delay(100);
+            
+            if (compareCredentials(tempusernameClient, temppasswordClient))
+            {
+                if(rememberClient)
+                {
+                    saveClientCredentials(tempusernameClient, temppasswordClient);
+                }
+                else if(!rememberClient)
+                {
+                    removeClientCredentials();
+                }
+                
+                String LoginStatus = "Login Success";
+                String LoginStatusBytes = toHexString(LoginStatus);
+                delay(100);
+                writeString(clientLoginStatus, LoginStatusBytes);
+                delay(1000);
+                resetVP(clientLoginStatus);
+
+                pageSwitch(HOME_PAGE);
+
+                break;
+                
+            }
+
+            else
+            {
+                String LoginStatus = "Login Fail";
+                String LoginStatusBytes = toHexString(LoginStatus);
+                delay(100);
+                writeString(clientLoginStatus, LoginStatusBytes);
+            }
+            
+            delay(10);
+            sendWriteCommand(LOGIN, RESET);
+            adminLogin = false;
+            clientLogin = false;
+        }
+
+        // Admin Login Mode
+        else if (adminLogin && wifiConnectedFlag)
+        {
+            Serial.println("Admin Login Mode");
+            delay(100);
+            
+            processAdminLogin(ADMIN_SSID, ADMIN_PASSWORD, ADMIN_PASSWORD_DISPLAY, ADMIN_PASSWORD_ICON);
+
+            String tempusernameAdmin = preferences.getString("admin_username", "");
+            String temppasswordAdmin = preferences.getString("admin_password", "");
+            
+            Serial.println("Saved username for admin login: "+ tempusernameAdmin);
+            Serial.println("Saved password for admin login: "+ temppasswordAdmin);
+            delay(100);
+            
+            if(compareCredentials(tempusernameAdmin, temppasswordAdmin))
+            {
+                if(rememberAdmin)
+                {
+                    saveAdminCredentials(tempusernameAdmin, temppasswordAdmin);
+                }
+                else if(!rememberAdmin)
+                {
+                    removeAdminCredentials();
+                }
+                
+                String LoginStatus = "Login Success";
+                String LoginStatusBytes = toHexString(LoginStatus);
+                delay(100);
+                writeString(adminLoginStatus, LoginStatusBytes);
+                delay(1000);
+                resetVP(adminLoginStatus);
+
+                pageSwitch(HOME_PAGE);
+                
+                break;
+            }
+
+            else
+            {
+                String LoginStatus = "Login Fail";
+                String LoginStatusBytes = toHexString(LoginStatus);
+                delay(100);
+                writeString(adminLoginStatus, LoginStatusBytes);
+            }
+            
+            delay(10);
+            sendWriteCommand(LOGIN, RESET);
+            clientLogin = false;
+            adminLogin = false;
+        }
+
+    }
+
+    Serial.println("Logout Task completed");   
 }
 
 void readeyeIcon(String temppassword, uint16_t passwordvp, uint16_t passwordIcon, uint16_t passwordDisplay)
@@ -1682,8 +1844,8 @@ void connectInternet()
                 if (WiFi.status() == WL_CONNECTED)
                 {
                     isConnected = true;
-                    Serial.println("WiFi Connected");
                     String InternetLoginStatus = "Wifi Connected";
+                    Serial.println(InternetLoginStatus);
 
                     showMessage(notificationStatus2, InternetLoginStatus);
                     wifiConnectedFlag = true;
@@ -1781,6 +1943,7 @@ void configureInternet()
 
                         showMessage(clientLoginStatus, InternetLoginStatus);
                         delay(500);
+                        resetVP(clientLoginStatus);
                         showMessage(notificationStatus2, InternetLoginStatus);
                         
                         wifiConnectedFlag = true;
@@ -1967,7 +2130,7 @@ void configuredeviceTask()
     }
 
     Serial.println("configuredeviceTask completed");
-    homepageTasks();
+    // homepageTasks();
 }
 
 void companyDetails()
@@ -2597,6 +2760,9 @@ void homepageTasks()
 {
     Serial.println("homepageTasks Started");
 
+    // Reset the last activity time
+    lastActivityTime = millis();
+
     while(true)
     {
         checkData = tempreadResponse();
@@ -2641,6 +2807,8 @@ void homepageTasks()
             // Handle Logout 
             else if (containsPattern(checkData, logout))
             {
+                logoutFlag = true;
+
                 pageSwitch(CLIENTPAGE);
                 Serial.println("Page Switched");
                 delay(5);
@@ -2649,8 +2817,12 @@ void homepageTasks()
                 vTaskSuspend(xHandledatetime); 
                 delay(100);
 
-                // Serial.println("Start login Task");
-                // vTaskResume(xHandlelogin); // Resume the next task before exit
+                // resetVP(CLIENT_SSID);
+                // resetVP(CLIENT_PASSWORD);
+                // resetVP(CLIENT_PASSWORD_DISPLAY);
+                // resetVP(ADMIN_SSID);
+                // resetVP(ADMIN_PASSWORD);
+                // resetVP(ADMIN_PASSWORD_DISPLAY);
                 delay(100);
                 
                 break;
@@ -3506,6 +3678,115 @@ void displayIcons()
 		}
 	}
     Serial.println("displayIcons completed");
+}
+
+void deviceConfigured()
+{
+    Serial.println("deviceConfigured Task Started");
+
+    while(true)
+    {
+        checkData = tempreadResponse();
+
+        // Unwanted Ack response from lcd
+        if(checkData == "5aa53824f4b")
+        {
+            checkData = "";
+        }
+
+        Serial.println("Data in deviceConfigured: " + checkData);
+        delay(100);
+
+        // Copyright accepted
+        if(containsPattern(checkData, "2e70"))
+        {
+            // Get ssid and password of Wi-Fi
+            internetSSID = preferences.getString("internetSSID", "");
+            internetPassword = preferences.getString("internetPass", "");
+            
+            Serial.println("Saved client username is: "+ internetSSID);
+            Serial.println("Saved client password is: "+ internetPassword);
+
+            //  If ssid and password is available then auto connect
+            if(internetSSID == predefinedInternetSSID && internetPassword == predefinedInternetPassword)
+            {
+                pageSwitch(NOTIFICATION_PAGE);
+
+                String message1 = "This is a Notification Screen";
+                showMessage(notificationStatus1, message1);
+                delay(100);
+
+                String message2 = "Connecting to Wi-Fi";
+                showMessage(notificationStatus2, message2);
+
+                delay(5);
+                connectInternet();
+            }
+
+            else
+            {
+                delay(500);
+                pageSwitch(INTERNETPAGE);
+                configureInternet();
+                pageSwitch(NOTIFICATION_PAGE);
+                delay(1000);
+            }
+
+            String message3 = "Logging In";
+            showMessage(notificationStatus3, message3);
+            delay(1000);
+
+            rememberClient = true;
+
+            if (rememberClient)
+            {
+                // Get client info for auto login
+                String tempClientusername = preferences.getString("client_username", "");
+                String tempClientpassword = preferences.getString("client_password", "");
+                delay(100);
+
+                Serial.println("Saved client username is: "+ tempClientusername);
+                Serial.println("Saved client password is: "+ tempClientpassword);
+
+                // If username and password is available then auto connect
+                if(tempClientusername == predefinedusername && tempClientpassword == predefinedPassword)
+                {
+                    message3 = "Login Success";
+                    showMessage(notificationStatus3, message3);
+                    delay(1000);
+                }
+                else
+                {
+                    message3 = "Login Fail"; // Wait here and get login credentials again
+                    showMessage(notificationStatus3, message3);
+                    delay(1000);
+
+                    pageSwitch(CLIENTPAGE);
+                }
+            }
+
+            else
+            {
+                message3 = "Remember Client is not true"; 
+                showMessage(notificationStatus3, message3);
+                delay(1000);
+            }
+            
+            String message4 = "Start Slide Show";
+            showMessage(notificationStatus4, message4);
+            delay(1000);
+
+            // Start slideShow
+            slideShowFlag = true;
+            slideShow();
+            
+            break;
+            
+        }
+
+    }
+
+    Serial.println("deviceConfigured Task Completed");
 }
 
 void saveClientCredentials(const String& username, const String& password) 

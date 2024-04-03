@@ -62,8 +62,8 @@ void setup()
   }
   Serial.println("RTC Initialized");
  
-  xTaskCreate(checkGPSTask, "CheckGPS", 2048, NULL, 1, &xHandlegps);
-  vTaskSuspend(xHandlegps);
+  // xTaskCreate(checkGPSTask, "CheckGPS", 2048, NULL, 1, &xHandlegps);
+  // vTaskSuspend(xHandlegps);
   
   xTaskCreate(dateTimeTask, "DateTimeTask", 2048, NULL, 1, &xHandledatetime);
   vTaskSuspend(xHandledatetime);
@@ -148,12 +148,16 @@ void setup()
 
   // removeClientCredentials();
   // removeAdminCredentials();
+
+  // Only for testing
+  configureDeviceOnceFlag = true;
+  ConfigureDeviceFlag = true;
+  loginFlag = true;
 }
 
 // Run Code in Loop
 void loop()
 {
-  // **************** Main Code starts here !!!!! ******************* //
   DateTime now = rtc.now();
 
   day = DAY.toInt(); 
@@ -171,7 +175,36 @@ void loop()
   // Serial.println("Week passed by year: "+weekByYear);
   // Serial.println("Current Week by year: "+currentWeekByYear);
 
-  loginTask();
+  // **************** Main Code starts here !!!!! ******************* //
 
+if(configureDeviceOnceFlag)
+{
+  configureDeviceOnceFlag = false;
+
+  if(!ConfigureDeviceFlag) // Device not configured
+  {
+    // Configure Device Flow
+    configureDevice();
+  }
+
+  else
+  {
+    // Device configured Flow
+    deviceConfigured();
+  }
+}
+
+  if(wifiConnectedFlag && loginFlag && ConfigureDeviceFlag)
+  {
+    if(!logoutFlag)
+    {
+      homepageTasks();
+    }
+    else
+    {
+      logoutTask();
+      // configureDeviceOnceFlag = true;
+    }
+  }
 }
 
