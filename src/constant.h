@@ -376,6 +376,7 @@ extern bool checkBoxFlag;
 extern bool activateSlideShow;
 extern bool slideShowFlag;
 extern bool ConfigureDeviceFlag;
+extern bool CheckConfigDevFlag;
 extern bool configureDeviceOnceFlag;
 extern bool dataEnteredtoday;
 extern bool weekElapsed;

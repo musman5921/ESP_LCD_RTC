@@ -151,8 +151,11 @@ void setup()
 
   // Only for testing
   configureDeviceOnceFlag = true;
-  ConfigureDeviceFlag = true;
   loginFlag = true;
+
+  // ConfigureDeviceFlag = true;
+  // preferences.putBool("ConfigDevFlag", ConfigureDeviceFlag);
+
 }
 
 // Run Code in Loop
@@ -175,35 +178,39 @@ void loop()
   // Serial.println("Week passed by year: "+weekByYear);
   // Serial.println("Current Week by year: "+currentWeekByYear);
 
+
+
+
   // **************** Main Code starts here !!!!! ******************* //
 
-if(configureDeviceOnceFlag)
-{
-  configureDeviceOnceFlag = false;
-
-  if(!ConfigureDeviceFlag) // Device not configured
+  // Check device configuration
+  if(configureDeviceOnceFlag)
   {
-    // Configure Device Flow
-    configureDevice();
+    configureDeviceOnceFlag = false; // important as device is configured only once
+    
+    CheckConfigDevFlag = preferences.getBool("ConfigDevFlag", ""); // get state of flag
+
+    if(!CheckConfigDevFlag) // Device not configured
+    {
+      configureDevice(); // Configure Device Flow
+    }
+
+    else
+    {
+      deviceConfigured(); // Device configured Flow
+    }
   }
 
-  else
-  {
-    // Device configured Flow
-    deviceConfigured();
-  }
-}
-
-  if(wifiConnectedFlag && loginFlag && ConfigureDeviceFlag)
+  // Wifi connected and login success and device configured
+  if(wifiConnectedFlag && loginFlag && CheckConfigDevFlag)
   {
     if(!logoutFlag)
     {
-      homepageTasks();
+      homepageTasks(); // Handle home page tasks
     }
     else
     {
-      logoutTask();
-      // configureDeviceOnceFlag = true;
+      logoutTask(); // Handle login after logout
     }
   }
 }

@@ -477,6 +477,7 @@ bool checkBoxFlag = false;
 bool activateSlideShow = false;
 bool slideShowFlag = false;
 bool ConfigureDeviceFlag = false;
+bool CheckConfigDevFlag = false;
 bool configureDeviceOnceFlag = false;
 bool dataEnteredtoday = false;
 bool weekElapsed = false;

@@ -1182,6 +1182,7 @@ void dateTimeTask(void *parameter)
     vTaskDelete(xHandledatetime); // Delete the task if it ever breaks out of the loop 
 }
 
+// Configure Device Flow
 void configureDevice()
 {
     loginTask();
@@ -1189,7 +1190,7 @@ void configureDevice()
     configuredeviceTask();
 }
 
-// Handles login of Client and Admin Panel
+// Handles first time login of Client and Admin Panel
 void loginTask()
 {
     Serial.println("Login Task Started");
@@ -1537,10 +1538,12 @@ void loginTask()
     // configuredeviceTask();
 }
 
+// Handle login after logout
 void logoutTask()
 {
     Serial.println("Logout Task Started");
     logoutFlag = false;
+    pageSwitch(CLIENTPAGE);
 
     while(true)
     {
@@ -1553,8 +1556,7 @@ void logoutTask()
         }
 
         Serial.println("Data in logoutTask: " + checkData);
-
-        pageSwitch(CLIENTPAGE);
+        delay(100);
 
         // Switch user show admin
         if(containsPattern(checkData, switchUser) && containsPattern(checkData, showAdmin)) 
@@ -1783,6 +1785,7 @@ void logoutTask()
     Serial.println("Logout Task completed");   
 }
 
+// Show/Hide Password
 void readeyeIcon(String temppassword, uint16_t passwordvp, uint16_t passwordIcon, uint16_t passwordDisplay)
 {
     // Important to write password first
@@ -1817,6 +1820,7 @@ void readeyeIcon(String temppassword, uint16_t passwordvp, uint16_t passwordIcon
     }
 }
 
+// Auto connect to saved network
 void connectInternet()
 {
     Serial.println("connectInternet Started"); 
@@ -1878,6 +1882,7 @@ void connectInternet()
     Serial.println("connectInternet Completed"); 
 }
 
+// connect to new network
 void configureInternet()
 {
     Serial.println("configureInternet Started"); 
@@ -1988,6 +1993,7 @@ void configureInternet()
     Serial.println("configureInternet Completed"); 
 }
 
+// Handles device configuration details
 void configuredeviceTask()
 {
     Serial.println("configuredeviceTask Started");
@@ -2078,10 +2084,11 @@ void configuredeviceTask()
                     slideShow();
                     
                     ConfigureDeviceFlag = true;
+                    preferences.putBool("ConfigDevFlag", ConfigureDeviceFlag); // save state of flag
                     break;  
                 }
 
-                // Manually enter details
+                // Manually enter remaining details
                 else if (containsPattern(autoLoad, companyDoneButtonNo))
                 {
                     pageSwitch(COMPANY_DETAILS_PAGE1);
@@ -2094,12 +2101,13 @@ void configuredeviceTask()
                     slideShow();
 
                     ConfigureDeviceFlag = true;
+                    preferences.putBool("ConfigDevFlag", ConfigureDeviceFlag); // save state of flag
                     break;  
                 }  
             }
         }
 
-        // Manually enter details
+        // Manually enter all details
         else
         {
             vTaskResume(xHandledatetime); // Resume date time task
@@ -2118,7 +2126,8 @@ void configuredeviceTask()
             slideShowFlag = true;
             slideShow();
             
-            ConfigureDeviceFlag = true;      
+            ConfigureDeviceFlag = true;  
+            preferences.putBool("ConfigDevFlag", ConfigureDeviceFlag);  // save state of flag
         }
 
         if(ConfigureDeviceFlag)
@@ -2661,6 +2670,7 @@ void devicesDirectionDetails()
     Serial.println("devicesDirectionDetails completed");
 }
 
+// Slide show
 void slideShow() 
 {
     Serial.println("slideShow Started");
@@ -2756,6 +2766,7 @@ void slideShow()
     Serial.println("slideShow completed");
 }
 
+// Handle home page tasks
 void homepageTasks()
 {
     Serial.println("homepageTasks Started");
@@ -2946,6 +2957,7 @@ void homepageTasks()
     // vTaskSuspend(xHandlehomepage); // Suspend the task
 }
 
+// Handles checklists
 void CheckBoxes()
 {
     Serial.println("CheckBoxes Started");
@@ -3433,6 +3445,7 @@ void CheckBoxes()
     Serial.println("CheckBoxes completed");
 }
 
+// Handles show report
 void displayIcons()
 {
     Serial.println("displayIcons Started");
@@ -3680,6 +3693,7 @@ void displayIcons()
     Serial.println("displayIcons completed");
 }
 
+// Device configured Flow
 void deviceConfigured()
 {
     Serial.println("deviceConfigured Task Started");
@@ -3704,8 +3718,8 @@ void deviceConfigured()
             internetSSID = preferences.getString("internetSSID", "");
             internetPassword = preferences.getString("internetPass", "");
             
-            Serial.println("Saved client username is: "+ internetSSID);
-            Serial.println("Saved client password is: "+ internetPassword);
+            Serial.println("Saved SSID is: "+ internetSSID);
+            Serial.println("Saved PASS is: "+ internetPassword);
 
             //  If ssid and password is available then auto connect
             if(internetSSID == predefinedInternetSSID && internetPassword == predefinedInternetPassword)
@@ -3754,6 +3768,16 @@ void deviceConfigured()
                     message3 = "Login Success";
                     showMessage(notificationStatus3, message3);
                     delay(1000);
+
+                    String message4 = "Start Slide Show";
+                    showMessage(notificationStatus4, message4);
+                    delay(1000);
+
+                    // Start slideShow
+                    slideShowFlag = true;
+                    slideShow();
+                    
+                    break;
                 }
                 else
                 {
@@ -3771,21 +3795,8 @@ void deviceConfigured()
                 showMessage(notificationStatus3, message3);
                 delay(1000);
             }
-            
-            String message4 = "Start Slide Show";
-            showMessage(notificationStatus4, message4);
-            delay(1000);
-
-            // Start slideShow
-            slideShowFlag = true;
-            slideShow();
-            
-            break;
-            
         }
-
     }
-
     Serial.println("deviceConfigured Task Completed");
 }
 
@@ -3819,6 +3830,7 @@ void saveInternetCredentials(const String& ssid, const String& password)
     preferences.putString("internetPass", password);
 }
 
+//  Returns True if remember me is checked
 bool RememberIcon(uint16_t rememberLogin)
 {
     delay(100);
@@ -3839,6 +3851,7 @@ bool RememberIcon(uint16_t rememberLogin)
     }
 }
 
+// Display message to LCD
 void showMessage(uint16_t VP_ADDRESS, String displaymessage)
 {
     resetVP(VP_ADDRESS);
