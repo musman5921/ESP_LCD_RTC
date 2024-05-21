@@ -482,6 +482,24 @@ bool companyManufacturerDetailsBack = false;
 bool unitDetailsBack = false;
 bool ArrowDetailsBack = false;
 
-// RX and TX
-const int GPSRXPin = 5;  // ESP32 GPIO 5 for RX
+// // RX and TX of GPS
+const int GPSRXPin = 10;  // ESP32 GPIO 5 for RX
 const int GPSTXPin = 18; // ESP32 GPIO 18 for TX
+
+// DWIN LCD UART PINS
+const int DWIN_RX_PIN = 15; // GPIO for RX
+const int DWIN_TX_PIN = 16; // GPIO for TX
+
+// LoRa module UART PINS
+const int LORA_RX_PIN = 35; // GPIO for RX
+const int LORA_TX_PIN = 36; // GPIO for TX
+
+// pin for the sdcard to connect with the DWIN LCD or ESP32
+const int SIGPIN = 5;
+
+// Pins for LoRa Mesh
+const int MOPIN = 18;
+const int M1PIN = 19;
+const int AUXPIN = 32;
+const int RLYPIN = 21;
+const int NODEID = 1;

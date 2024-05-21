@@ -489,8 +489,27 @@ extern const String manufacturerBaseUrl;
 // extern String updateOrganizationDetails;
 
 
-// RX and TX
+// // RX and TX of GPS
 extern const int GPSRXPin;
 extern const int GPSTXPin;
+
+// DWIN LCD UART PINS
+extern const int DWIN_RX_PIN; // GPIO for RX
+extern const int DWIN_TX_PIN; // GPIO for TX
+
+// LoRa module UART PINS
+extern const int LORA_RX_PIN; // GPIO for RX
+extern const int LORA_TX_PIN; // GPIO for TX
+
+// pin for the sdcard to connect with the DWIN LCD or ESP32
+extern const int SIGPIN;
+
+// Defines for LoRa Mesh
+#define RH_HAVE_SERIAL
+extern const int MOPIN;
+extern const int M1PIN;
+extern const int AUXPIN;
+extern const int RLYPIN;
+extern const int NODEID;
 
 #endif // CONSTANTS_H

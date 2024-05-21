@@ -18,15 +18,29 @@
 #include <SoftwareSerial.h>
 #include <Preferences.h>
 
+// For LoRa Mesh networking
+#include <RH_E32.h>
+#include <RHMesh.h>
+#include <vector>
+
 extern RTC_DS3231 rtc; // Define rtc
 extern SoftwareSerial SerialGPS;
 
+extern SoftwareSerial LoRaSerial;
+extern RHMesh mesh;
+ 
 extern Preferences preferences;
 
 struct Credentials 
 {
     String ssid;
     String password;
+};
+
+struct NodeStatus {
+    uint8_t nodeId;
+    unsigned long lastSeen;
+    bool isActive;
 };
 
 void readData();
@@ -112,5 +126,16 @@ void showMessage(uint16_t VP_ADDRESS, String displaymessage);
 // String hexToText(const String& hexString);
 // void readTextFromDWIN();
 // void writeStringToDwin(uint16_t address, const String &data);
+
+// for LoRa Mesh 
+const __FlashStringHelper* getErrorString(uint8_t status);
+bool initializeMESH();
+void broadcastPresence();
+void updateNodeStatus(uint8_t nodeId);
+void checkNodeActivity();
+void listenForNodes();
+size_t getTotalNodes();
+void printNodeStatuses();
+void printNetworkStats();
 
 #endif // LCD_H

@@ -14,17 +14,23 @@
 RTC_DS3231 rtc;
 Preferences preferences;
 
+// RH_E32 driver(&Serial2, MOPIN, M1PIN, AUXPIN); //M0, M1, AUX
+RH_E32 driver(&LoRaSerial, 4, 5, 8);
+RHMesh mesh(driver, NODEID); // Node ID 
+
+std::vector<NodeStatus> nodeStatuses;
+
 // Dummy Function to Read Data from Lcd
 void readData()
 {
     byte open[] = {90, 165, 0x04, 0x83, 0x00, 0x14, 0x01};
-    Serial2.write(open, sizeof(open));
+    Serial1.write(open, sizeof(open));
     delay(5);
 
     String data = "";
-    while (Serial2.available() > 0)
+    while (Serial1.available() > 0)
     {
-        char Received = Serial2.read();
+        char Received = Serial1.read();
         Serial.println(Received, HEX);
         if ((Received == '0') || (Received == '1') || (Received == '2') || (Received == '3') || (Received == '4') || (Received == '5') || (Received == '6') || (Received == '7') || (Received == '8') || (Received == '9') || (Received == '.'))
         {
@@ -38,27 +44,27 @@ void readData()
 void checkVersion()
 {
     byte version[] = {0x5A, 0xA5, 0x04, 0x83, 0x00, 0x0F, 0x01};
-    Serial2.write(version, sizeof(version));
+    Serial1.write(version, sizeof(version));
 }
 
 // Write Dataframe to Lcd at Specified VP Addresses
 void sendReadCommand(uint16_t address, uint16_t data_length)
 {
     byte frames[] = {0x5A, 0xA5, 0x04, 0x83, (byte)(address >> 8), (byte)(address & 0xFF), (byte)data_length};
-    Serial2.write(frames, sizeof(frames));
+    Serial1.write(frames, sizeof(frames));
 }
 
 void sendWriteCommand(uint16_t address, byte data)
 {
     byte frame[] = {0x5A, 0xA5, 0x04, 0x82, (byte)(address >> 8), (byte)(address & 0xFF), data};
-    Serial2.write(frame, sizeof(frame));
+    Serial1.write(frame, sizeof(frame));
 }
 
 // Reset vp address
 void resetVP(uint16_t address)
 {
     byte frame[] = {0x5A, 0xA5, 0x2B, 0x82, (byte)(address >> 8), (byte)(address & 0xFF)};
-    Serial2.write(frame, sizeof(frame));
+    Serial1.write(frame, sizeof(frame));
     // for (int i = 0; i < sizeof(frame); i++)
     // {
     //     Serial.print("Frame ");
@@ -69,7 +75,7 @@ void resetVP(uint16_t address)
 
     for (int i = 0; i < 40; i++)
     {
-        Serial2.write(0x00);
+        Serial1.write(0x00);
     }
 }
 
@@ -101,11 +107,11 @@ bool readCheckboxState()
     sendReadCommand(checkboxVP, 0x01);
     delay(100); // Delay for the display to respond
 
-    if (Serial2.available())
+    if (Serial1.available())
     {
-        int available_bytes = Serial2.available();
+        int available_bytes = Serial1.available();
         byte response[available_bytes];
-        Serial2.readBytes(response, available_bytes);
+        Serial1.readBytes(response, available_bytes);
 
         // Check if the response is for the correct VP address and extract the state
         if (response[3] == 0x83 && response[4] == (byte)(checkboxVP >> 8) && response[5] == (byte)(checkboxVP & 0xFF))
@@ -156,9 +162,9 @@ String extractDataBeforeMarker(String input, String startMarker)
 String tempreadResponse()
 {
     String completeData = "";
-    while (Serial2.available())
+    while (Serial1.available())
     {
-        char a = Serial2.read();
+        char a = Serial1.read();
         completeData += String(a, HEX);
     }
     return completeData;
@@ -192,10 +198,10 @@ String dummyReadResponse()
     String completeData = "";
     int byteCount = 0;
 
-    while (Serial2.available())
+    while (Serial1.available())
     {
-        // Serial.print(Serial2.read(),HEX);
-        char a = Serial2.read();
+        // Serial.print(Serial1.read(),HEX);
+        char a = Serial1.read();
         // completeData += String(a, HEX);
         if (byteCount > 6)
         {
@@ -398,9 +404,9 @@ String readText()
 {
     String completeData = "";
 
-    while (Serial2.available())
+    while (Serial1.available())
     {
-        char a = Serial2.read();
+        char a = Serial1.read();
         completeData += String(a);
     }
 
@@ -485,20 +491,20 @@ String readResponse()
 {
     const int maxResponseLength = 8;
     char responseBytes[maxResponseLength]; // Array to store the bytes
-    int availableBytes = Serial2.available();
+    int availableBytes = Serial1.available();
 
     // Check if available bytes are less than 5, then keep reading
     while (availableBytes < 5)
     {
         delay(100);
-        availableBytes = Serial2.available();
+        availableBytes = Serial1.available();
     }
 
-    // Read bytes from Serial2, up to the maximum response length
+    // Read bytes from Serial1, up to the maximum response length
     int bytesRead = 0;
-    while (bytesRead < maxResponseLength && Serial2.available())
+    while (bytesRead < maxResponseLength && Serial1.available())
     {
-        responseBytes[bytesRead] = Serial2.read();
+        responseBytes[bytesRead] = Serial1.read();
         bytesRead++;
     }
 
@@ -682,7 +688,7 @@ void performLoginCheck(bool &clientLogin, bool &adminLogin)
 void readPage()
 {
     byte readpage[] = {0x5A, 0xA5, 0x04, 0x83, 0x00, 0x14, 0x01};
-    Serial2.write(readpage, sizeof(readpage));
+    Serial1.write(readpage, sizeof(readpage));
 }
 
 // Page Switching
@@ -690,7 +696,7 @@ void pageSwitch(byte pageNo)
 {
     // Frame array
     byte open[] = {0x5A, 0xA5, 0x07, 0x82, 0x00, 0x84, 0x5A, 0x01, 0x00, pageNo};
-    Serial2.write(open, sizeof(open));
+    Serial1.write(open, sizeof(open));
     //    for (int i = 0; i < sizeof(open); i++) {
     //     Serial.print("Open Byte ");
     //     Serial.print(i);
@@ -705,10 +711,10 @@ void iconDisplay(byte iconNo)
 
     byte iconCommand[] = {0x5A, 0xA5, 0x0F, 0x82, 0x54, 0x40, 0x30, 0x48, 0x00, 0x01, 0x01, 0x68, 0x01, 0x68, 0x00, 0x01, 0xFF, 0x00};
 
-    Serial2.write(iconCommand, sizeof(iconCommand));
+    Serial1.write(iconCommand, sizeof(iconCommand));
 
     // byte icon[] = {0x5A, 0xA5, 0x0F, 0x82, 0x54, 0x40, 0x30, 0x07, 0x00, 0x01, 0x01, 0x68, 0x01, 0x68, 0x00, 0x01, 0xFF, 0x00};
-    // Serial2.write(icon, sizeof(icon));
+    // Serial1.write(icon, sizeof(icon));
     // for (int i = 0; i < sizeof(icon); i++)
     // {
     //     Serial.print("Icon Byte ");
@@ -723,7 +729,7 @@ void iconDisplay(byte iconNo)
 void systemReset()
 {
     byte reset[] = {0x5A, 0xA5, 0x07, 0x82, 0x00, 0x04, 0x55, 0xAA, 0x5A, 0xA5};
-    Serial2.write(reset, sizeof(reset));
+    Serial1.write(reset, sizeof(reset));
 }
 
 // Compare String
@@ -806,7 +812,7 @@ void writeString(uint16_t address, const String &hexData)
     memcpy(frame + 6, charData, dataLength);
 
     // Write the frame to the serial port
-    Serial2.write(frame, frameSize);
+    Serial1.write(frame, frameSize);
 
     // Clean up the dynamically allocated buffers
     delete[] frame;
@@ -932,7 +938,7 @@ void sendIconcommand(uint16_t pageVP, byte icon0, byte icon1, byte icon2, byte i
 		Serial.println(iconcommand[i], HEX);
 	}
 	*/
-	Serial2.write(iconcommand, sizeof(iconcommand));
+	Serial1.write(iconcommand, sizeof(iconcommand));
 	Serial.println("Show icon command sent");
 	delay(300);
 }
@@ -3557,3 +3563,113 @@ void showMessage(uint16_t VP_ADDRESS, String displaymessage)
     writeString(VP_ADDRESS, StatusBytes);
 }
 
+// For LoRa Mesh
+bool initializeMESH(){
+if (!mesh.init()) {
+        // Serial.println("Mesh initialization failed");
+        return false;
+    }
+    return true;
+}
+
+void broadcastPresence() {
+    const char* presenceMsg = "Node Present";
+    uint8_t status = mesh.sendtoWait((uint8_t*)presenceMsg, strlen(presenceMsg) + 1, RH_BROADCAST_ADDRESS);
+    if (status == RH_ROUTER_ERROR_NONE) {
+        Serial.println("Message sent successfully");
+    } else {
+        Serial.print("Failed to send message, error: ");
+        Serial.println(status);
+        Serial.println((const __FlashStringHelper*)getErrorString(status));
+    }
+}
+
+// Function to listen for other nodes and update their status
+void listenForNodes() {
+    uint8_t buf[RH_MESH_MAX_MESSAGE_LEN];
+    uint8_t len = sizeof(buf);
+    uint8_t from;
+
+    if (mesh.recvfromAckTimeout(buf, &len, 2000, &from)) {
+        Serial.print("Received message from node ");
+        Serial.print(from);
+        Serial.print(": ");
+        Serial.println((char*)buf);
+
+        // Update node information or add new node
+        updateNodeStatus(from);
+    }
+}
+
+// Function to update or add a node status in the list
+void updateNodeStatus(uint8_t nodeId) {
+    bool nodeFound = false;
+    unsigned long currentTime = millis();
+    for (auto& status : nodeStatuses) {
+        if (status.nodeId == nodeId) {
+            status.lastSeen = currentTime;
+            status.isActive = true;
+            nodeFound = true;
+            break;
+        }
+    }
+    if (!nodeFound) {
+        nodeStatuses.push_back({nodeId, currentTime, true});
+    }
+}
+
+// Function to check and update the activity status of nodes
+void checkNodeActivity() {
+    unsigned long currentTime = millis();
+    const unsigned long timeout = 60000; // 1 minute timeout to consider a node as dead
+    for (auto& status : nodeStatuses) {
+        if (status.isActive && (currentTime - status.lastSeen > timeout)) {
+            status.isActive = false;
+            Serial.print("Node ");
+            Serial.print(status.nodeId);
+            Serial.println(" is now considered dead.");
+        }
+    }
+}
+
+// Function to get the total number of known nodes
+size_t getTotalNodes() {
+  return nodeStatuses.size();
+}
+
+// Function to print the status of all nodes known to this node
+void printNodeStatuses() {
+  size_t totalNodes = getTotalNodes();
+    Serial.print("Total Nodes: ");
+    Serial.println(totalNodes);
+
+    for (const auto& status : nodeStatuses) { // range based loop
+        Serial.print("Node ");
+        Serial.print(status.nodeId);
+        Serial.print(": ");
+        Serial.println(status.isActive ? "Active" : "Dead");
+    }
+}
+
+void printNetworkStats() {
+    int totalNodes = nodeStatuses.size();  // Total number of nodes is the size of the vector
+    int activeNodes = 0;
+    int deadNodes = 0;
+
+    // Count active and dead nodes
+    for (const auto& status : nodeStatuses) {
+        if (status.isActive) {
+            activeNodes++;  // Increment active node count
+        } else {
+            deadNodes++;    // Increment dead node count
+        }
+    }
+
+    // Print the results
+    Serial.print("Total Nodes: ");
+    Serial.println(totalNodes);
+    Serial.print("Active Nodes: ");
+    Serial.println(activeNodes);
+    Serial.print("Dead Nodes: ");
+    Serial.println(deadNodes);
+}

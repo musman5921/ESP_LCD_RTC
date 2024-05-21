@@ -4,9 +4,7 @@
  Engineer ----------- Muhammad Usman
  File --------------- Main File (Code Exceution Start in this file)
  Company -----------  Machadev Pvt Limited
- */
 
-/*
 	Firmware Details
 
 	Implemented:
@@ -19,7 +17,40 @@
   working on login credentials to save, load and autofill credential details of client and admin panel.
   working on WiFi credentials to save, load and autofill ssid and password.
 
- */
+Developed a mesh network using Ebyte LoRa E32 with ESP32
+The logic is same for each node
+
+Flow:
+The mesh network program is same for all nodes in the network
+  Each node listen to other nodes in a loop
+  Each node update activity of other nodes after every 10 seconds
+  Each node broadcast message after every 30 seconds
+  Each node print stats of network after every 60 seconds
+
+Tests:
+The network contains 4 nodes
+  Each node knows how many nodes are available, active and dead in his network
+  Each node successfully updates its node info container after every 60 seconds
+  
+platformio:
+  board selected: espressif esp32 dev module 
+  monitor speed: 115200
+
+Escalator node:
+AUX pin of LoRa module is NOT connected with ESP32 
+Relay is active Low
+and an led is connected in series with relay
+
+no ack if message is broadcasted
+
+FyreBox node:
+AUX pin of LoRa module is NOT connected with ESP32 S3 mini
+DWIN LCD is connected at IO15(TX) and IO16(RX) UART1
+LoRa module is connecetd at IO35(RX) and IO36(TX) UART2
+Configure UART2
+SIG pin must be HIGH IO5 for the sdcard to connect with the DWIN LCD
+
+*/
 
 // Import Libraries
 #include "lcd.h"
@@ -37,16 +68,37 @@ const char* ssid = "Machadev";
 const char* password = "13060064"; 
 
 // Initialize and define SoftwareSerial object
-SoftwareSerial SerialGPS(GPSRXPin, GPSTXPin);
+SoftwareSerial SerialGPS(GPSRXPin, GPSTXPin); // not currently used
 
+// Initialize and define SoftwareSerial object
+SoftwareSerial LoRaSerial(LORA_RX_PIN, LORA_TX_PIN);
 
 // Setup Function: Call Once when Code Starts
 void setup()
 {
-  Serial.println();
-  Serial.begin(115200);  // Start the Serial Communication with PC
-  Serial2.begin(115200); // Start the Serial Communication with DWIN Display
-  SerialGPS.begin(9600);
+  // SIG pin must be HIGH for the sdcard to connect with the DWIN LCD
+  pinMode(SIGPIN, OUTPUT);
+  digitalWrite(SIGPIN, HIGH);
+
+  // Start the Serial Communication with PC
+  Serial.begin(115200);  
+  Serial.println("Debug Serial is ready.");
+
+  // Start the Serial Communication with DWIN LCD
+  Serial1.begin(9600, SERIAL_8N1, DWIN_RX_PIN, DWIN_TX_PIN); 
+  Serial.println("Serial1 is ready.");
+
+  // Start the Serial Communication with LoRa module
+  // Serial2.begin(9600, SERIAL_8N1, LORA_RX_PIN, LORA_TX_PIN);
+  // Serial.println("Serial2 is ready.");
+
+  Serial.println("Initializing mesh...");
+  if(! initializeMESH()){
+    Serial.println("Mesh initialization failed");
+    while(1);
+  }
+  Serial.println("Mesh initialized successfully.");
+  
   EEPROM.begin(512); // Initialize EEPROM
   preferences.begin("credentials", false); // Open Preferences with "credentials" namespace
   delay(5);
@@ -157,6 +209,7 @@ void setup()
 
   removeClientCredentials();
   // removeAdminCredentials();
+  
 }
 
 // Run Code in Loop
