@@ -128,6 +128,7 @@ void showMessage(uint16_t VP_ADDRESS, String displaymessage);
 // void writeStringToDwin(uint16_t address, const String &data);
 
 // for LoRa Mesh 
+void LoRatask(void* parameter);
 const __FlashStringHelper* getErrorString(uint8_t status);
 bool initializeMESH();
 void broadcastPresence();

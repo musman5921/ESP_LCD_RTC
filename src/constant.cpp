@@ -8,6 +8,7 @@
 
 #include "constant.h"
 
+TaskHandle_t xHandleLoRa;
 TaskHandle_t xHandlegps;
 TaskHandle_t xHandledatetime;
 TaskHandle_t xHandlelogin;
@@ -487,19 +488,27 @@ const int GPSRXPin = 10;  // ESP32 GPIO 5 for RX
 const int GPSTXPin = 18; // ESP32 GPIO 18 for TX
 
 // DWIN LCD UART PINS
-const int DWIN_RX_PIN = 15; // GPIO for RX
-const int DWIN_TX_PIN = 16; // GPIO for TX
+const int DWIN_RX_PIN = 15; // GPIO for ESP32(RX)
+const int DWIN_TX_PIN = 16; // GPIO for ESP32(TX)
 
 // LoRa module UART PINS
-const int LORA_RX_PIN = 35; // GPIO for RX
-const int LORA_TX_PIN = 36; // GPIO for TX
+const int LORA_TX_PIN = 35; // GPIO for ESP32(RX)
+const int LORA_RX_PIN = 36; // GPIO for ESP32(TX)
 
 // pin for the sdcard to connect with the DWIN LCD or ESP32
 const int SIGPIN = 5;
 
 // Pins for LoRa Mesh
-const int MOPIN = 18;
-const int M1PIN = 19;
-const int AUXPIN = 32;
+const int MOPIN = 39;
+const int M1PIN = 38;
+const int AUXPIN = 37;
 const int RLYPIN = 21;
 const int NODEID = 1;
+// variables to keep track of each node
+int totalNodes = 0;
+int activeNodes = 0;
+int deadNodes = 0;
+
+// Pins for RTC
+const int RTC_SDA = 8;
+const int RTC_SCL = 9;

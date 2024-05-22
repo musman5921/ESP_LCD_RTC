@@ -45,9 +45,9 @@ no ack if message is broadcasted
 
 FyreBox node:
 AUX pin of LoRa module is NOT connected with ESP32 S3 mini
-DWIN LCD is connected at IO15(TX) and IO16(RX) UART1
-LoRa module is connecetd at IO35(RX) and IO36(TX) UART2
-Configure UART2
+Serial0 is for program uploading and debugging
+DWIN LCD is connected at IO15(TX) and IO16(RX) Serial1
+LoRa module is connecetd at IO35(RX) and IO36(TX) Using software serial
 SIG pin must be HIGH IO5 for the sdcard to connect with the DWIN LCD
 
 */
@@ -71,7 +71,7 @@ const char* password = "13060064";
 SoftwareSerial SerialGPS(GPSRXPin, GPSTXPin); // not currently used
 
 // Initialize and define SoftwareSerial object
-SoftwareSerial LoRaSerial(LORA_RX_PIN, LORA_TX_PIN);
+SoftwareSerial LoRaSerial(LORA_TX_PIN, LORA_RX_PIN); // ESP32(RX), ESP32(TX)
 
 // Setup Function: Call Once when Code Starts
 void setup()
@@ -85,20 +85,52 @@ void setup()
   Serial.println("Debug Serial is ready.");
 
   // Start the Serial Communication with DWIN LCD
-  Serial1.begin(9600, SERIAL_8N1, DWIN_RX_PIN, DWIN_TX_PIN); 
+  Serial1.begin(115200, SERIAL_8N1, DWIN_RX_PIN, DWIN_TX_PIN); 
   Serial.println("Serial1 is ready.");
 
   // Start the Serial Communication with LoRa module
+  LoRaSerial.begin(9600);
+
   // Serial2.begin(9600, SERIAL_8N1, LORA_RX_PIN, LORA_TX_PIN);
   // Serial.println("Serial2 is ready.");
 
-  Serial.println("Initializing mesh...");
-  if(! initializeMESH()){
+  Serial.println("Initializing mesh");
+  while(! initializeMESH()){  // stays in a loop until LoRa found 
     Serial.println("Mesh initialization failed");
-    while(1);
-  }
+    Serial.println("Retyring...");
+    delay(3000);
+   }
   Serial.println("Mesh initialized successfully.");
-  
+
+  // Serial.println("Initializing mesh...");
+  // if(! initializeMESH()){ // Halt if LoRa not found 
+  //   Serial.println("Mesh initialization failed");
+  //   Serial.println("Freezing...");
+  //   while(1);
+  // }
+  // Serial.println("Mesh initialized successfully.");
+
+  // testing RTC
+  Wire.begin(RTC_SDA, RTC_SCL);
+  delay(5);
+
+  // Mandatory for gps task
+  Serial.println("Initializing RTC");
+  while (!rtc.begin()){ // stays in a loop until RTC found 
+    Serial.println("Couldn't find RTC");
+    Serial.println("Retyring...");
+    delay(3000);
+  }
+  Serial.println("RTC Initialized.");
+
+  // Mandatory for gps task
+  // if (!rtc.begin()){ // Halt if RTC not found 
+  //   Serial.println("Couldn't find RTC");
+  //   Serial.println("Freezing...");
+  //   while (1);
+  // }
+  // Serial.println("RTC Initialized");
+
   EEPROM.begin(512); // Initialize EEPROM
   preferences.begin("credentials", false); // Open Preferences with "credentials" namespace
   delay(5);
@@ -106,18 +138,13 @@ void setup()
   Serial.println("Page Switched");
   delay(5);
 
-  // Mandatory for gps task
-  if (!rtc.begin())
-  {
-    Serial.println("Couldn't find RTC");
-    while (1);
-  }
-  Serial.println("RTC Initialized");
+  xTaskCreatePinnedToCore(LoRatask, "LoRatask", 4096, NULL, 1, &xHandleLoRa, 1);
+  // xTaskCreate(LoRatask, "LoRatask", 4096, NULL, 1, &xHandleLoRa);
 
   xTaskCreate(loginTask, "LoginTask", 4096, NULL, 2, &xHandlelogin);
   
-  xTaskCreate(checkGPSTask, "CheckGPS", 2048, NULL, 1, &xHandlegps);
-  vTaskSuspend(xHandlegps);
+  // xTaskCreate(checkGPSTask, "CheckGPS", 2048, NULL, 1, &xHandlegps);
+  // vTaskSuspend(xHandlegps);
   
   xTaskCreate(dateTimeTask, "DateTimeTask", 2048, NULL, 1, &xHandledatetime);
   vTaskSuspend(xHandledatetime);
@@ -128,7 +155,7 @@ void setup()
   
   xTaskCreate(homepageTasks, "HomepageTasks", 4096, NULL, 1, &xHandlehomepage);
   vTaskSuspend(xHandlehomepage);
-  
+
   // resetVP(CLIENT_SSID);
   resetVP(VP_UNIT_DATE);
   resetVP(VP_UNIT_TIME);
@@ -201,13 +228,13 @@ void setup()
   // delay(5);
 
   // Only for testing of checklists data entery
-  EEPROM.write(EEPROMAddress, 0);
-  EEPROM.commit(); // Commit changes
+  // EEPROM.write(EEPROMAddress, 0);
+  // EEPROM.commit(); // Commit changes
 
   // preferences.putString("internetSSID", " ");
   // preferences.putString("internetPass", " ");
 
-  removeClientCredentials();
+  // removeClientCredentials();
   // removeAdminCredentials();
   
 }

@@ -15,6 +15,7 @@
 // #define Baud_RATE_SERIAL  9600
 // #define Baud_RATE_DISPLAY  9600
 
+extern TaskHandle_t xHandleLoRa;
 extern TaskHandle_t xHandlegps;
 extern TaskHandle_t xHandledatetime;
 extern TaskHandle_t xHandlelogin;
@@ -511,5 +512,13 @@ extern const int M1PIN;
 extern const int AUXPIN;
 extern const int RLYPIN;
 extern const int NODEID;
+// variables to keep track of each node
+extern int totalNodes;
+extern int activeNodes;
+extern int deadNodes;
+
+ // Pins for RTC
+extern const int RTC_SDA;
+extern const int RTC_SCL;
 
 #endif // CONSTANTS_H

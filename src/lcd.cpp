@@ -15,7 +15,7 @@ RTC_DS3231 rtc;
 Preferences preferences;
 
 // RH_E32 driver(&Serial2, MOPIN, M1PIN, AUXPIN); //M0, M1, AUX
-RH_E32 driver(&LoRaSerial, 4, 5, 8);
+RH_E32 driver(&LoRaSerial, MOPIN, M1PIN, AUXPIN);
 RHMesh mesh(driver, NODEID); // Node ID 
 
 std::vector<NodeStatus> nodeStatuses;
@@ -1202,7 +1202,7 @@ void loginTask(void *parameter)
             checkData = "";
         }
 
-        Serial.println("Data in loginTask:" +checkData);
+        // Serial.println("Data in loginTask:" +checkData);
 
         // Copyright accepted
         if(containsPattern(checkData, "2e70"))
@@ -1292,7 +1292,7 @@ void loginTask(void *parameter)
                 delay(1000);
                 // uniqueKeyFlag = true;
             }
-            /*
+            
             delay(1000);
 
             // Start slideShow
@@ -1302,7 +1302,7 @@ void loginTask(void *parameter)
             Serial.println("Start Home page Tasks");
             vTaskResume(xHandlehomepage); // Resume the next task before exit
             break;
-            */
+            
         }
 
         // Switch user show admin
@@ -1842,7 +1842,7 @@ void configuredeviceTask(void *parameter)
     while(true)
     {   
         DynamicJsonDocument doc(1024);
-        Serial.println("In Device Configuration");
+        // Serial.println("In Device Configuration");
         delay(100);
 
         String APIresponse = "";
@@ -2620,7 +2620,7 @@ void homepageTasks(void *parameter)
         {
             checkData = "";
         }
-        Serial.println("Data in homepageTasks:" +checkData);
+        // Serial.println("Data in homepageTasks:" +checkData);
         delay(100);
 
         // Show/Hide Menu & select between Menu functions
@@ -2674,6 +2674,13 @@ void homepageTasks(void *parameter)
             pageSwitch(UNITSLISTS_PAGE);
             Serial.println("Page Switched");
             delay(5);
+
+            // Testing Units online
+            // String unitsOnlineString = "4";
+            String tempactiveNodesString = String(activeNodes);
+            String unitsOnlineBytes = toHexString(tempactiveNodesString);
+            delay(10);
+            writeString(0x4B0D, unitsOnlineBytes);
         }
 
         // Show Report
@@ -3564,6 +3571,53 @@ void showMessage(uint16_t VP_ADDRESS, String displaymessage)
 }
 
 // For LoRa Mesh
+void LoRatask(void* parameter){
+    Serial.println("LoRatask Started");
+    for (;;) {
+        static unsigned long lastBroadcastTime = 0;
+        static unsigned long lastCheckTime = 0;
+        static unsigned long lastStatusPrintTime = 0;
+        unsigned long currentMillis = millis();
+
+        if (currentMillis - lastBroadcastTime > 30000) {  // Every 30 seconds
+            broadcastPresence();
+            lastBroadcastTime = currentMillis;
+        }
+
+        listenForNodes();
+
+        if (currentMillis - lastCheckTime > 10000) {  // Every 10 seconds
+            checkNodeActivity();
+            lastCheckTime = currentMillis;
+        }
+
+        if (currentMillis - lastStatusPrintTime > 60000) {  // Every 60 seconds
+            // printNodeStatuses();  // Print the statuses of all nodes
+            printNetworkStats(); 
+            lastStatusPrintTime = currentMillis;
+        }
+    }
+    Serial.println("LoRatask completed");
+    Serial.println("LoRatask Suspended");
+    vTaskSuspend(xHandleLoRa); // Suspend the task
+}
+
+const __FlashStringHelper* getErrorString(uint8_t error) {
+  switch(error) {
+    case 1: return F("invalid length");
+    break;
+    case 2: return F("no route");
+    break;
+    case 3: return F("timeout");
+    break;
+    case 4: return F("no reply");
+    break;
+    case 5: return F("unable to deliver");
+    break;
+  }
+  return F("unknown");
+}
+
 bool initializeMESH(){
 if (!mesh.init()) {
         // Serial.println("Mesh initialization failed");
@@ -3652,18 +3706,26 @@ void printNodeStatuses() {
 }
 
 void printNetworkStats() {
-    int totalNodes = nodeStatuses.size();  // Total number of nodes is the size of the vector
-    int activeNodes = 0;
-    int deadNodes = 0;
+    // int totalNodes = nodeStatuses.size();  // Total number of nodes is the size of the vector
+    // int activeNodes = 0;
+    // int deadNodes = 0;
 
     // Count active and dead nodes
     for (const auto& status : nodeStatuses) {
+        Serial.print("Node ");
+        Serial.print(status.nodeId);
+        Serial.print(": ");
+        Serial.println(status.isActive ? "Active" : "Dead");
+
         if (status.isActive) {
             activeNodes++;  // Increment active node count
         } else {
             deadNodes++;    // Increment dead node count
         }
     }
+
+    // Total number of nodes is the size of the vector
+    totalNodes = nodeStatuses.size();  
 
     // Print the results
     Serial.print("Total Nodes: ");
