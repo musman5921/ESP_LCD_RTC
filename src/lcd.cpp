@@ -1163,9 +1163,9 @@ void dateTimeTask(void *parameter)
         // String dateString = String(now.day()) + "/" + String(now.month()) + "/" + String(now.year() % 100);
         // String timeString = String(now.hour()) + ":" + String(now.minute());
 
-        Serial.print("ESP32 RTC Date Time: ");
-        Serial.println(timeString);
-        Serial.println(dateString);
+        // Serial.print("ESP32 RTC Date Time: ");
+        // Serial.println(timeString);
+        // Serial.println(dateString);
 
         String dateBytes = toHexString(dateString);
         delay(10);
@@ -2675,12 +2675,13 @@ void homepageTasks(void *parameter)
             Serial.println("Page Switched");
             delay(5);
 
-            // Testing Units online
-            // String unitsOnlineString = "4";
-            String tempactiveNodesString = String(activeNodes);
-            String unitsOnlineBytes = toHexString(tempactiveNodesString);
-            delay(10);
-            writeString(0x4B0D, unitsOnlineBytes);
+            displayFyreBoxUnitList();
+
+            slideShowFlag = false;
+            FyreBoxUnitListFlag = true;
+
+            FyreBoxUnitList();
+
         }
 
         // Show Report
@@ -3570,6 +3571,124 @@ void showMessage(uint16_t VP_ADDRESS, String displaymessage)
     writeString(VP_ADDRESS, StatusBytes);
 }
 
+void displayFyreBoxUnitList() {
+
+    // Reset all VPs before updating
+    resetVP(Text_Active_Device_1);
+    resetVP(Text_Active_Device_2);
+    resetVP(Text_Active_Device_3);
+    resetVP(Text_Active_Device_4);
+    resetVP(Text_Active_Device_5);
+    resetVP(Text_Active_Device_6);
+    resetVP(Text_Active_Device_7);
+    resetVP(Text_Active_Device_8);
+    resetVP(Text_Active_Device_9);
+    resetVP(Text_Active_Device_10);
+    resetVP(Text_Active_Device_11);
+    resetVP(Text_Active_Device_12);
+    resetVP(Text_Active_Device_13);
+    resetVP(Text_Active_Device_14);
+    resetVP(Text_Active_Device_15);
+    resetVP(Text_Active_Device_16);
+
+    resetVP(Text_Inactive_Device_1);
+    resetVP(Text_Inactive_Device_2);
+    resetVP(Text_Inactive_Device_3);
+    resetVP(Text_Inactive_Device_4);
+    resetVP(Text_Inactive_Device_5);
+    resetVP(Text_Inactive_Device_6);
+    resetVP(Text_Inactive_Device_7);
+    resetVP(Text_Inactive_Device_8);
+    resetVP(Text_Inactive_Device_9);
+    resetVP(Text_Inactive_Device_10);
+    resetVP(Text_Inactive_Device_11);
+    resetVP(Text_Inactive_Device_12);
+    resetVP(Text_Inactive_Device_13);
+    resetVP(Text_Inactive_Device_14);
+    resetVP(Text_Inactive_Device_15);
+    resetVP(Text_Inactive_Device_16);
+
+    resetVP(Text_Units_online);
+
+    delay(100);
+    
+    // Units online
+    String tempactiveNodesString = String(activeNodes);
+    String unitsOnlineBytes = toHexString(tempactiveNodesString);
+    delay(10);
+    writeString(Text_Units_online, unitsOnlineBytes);
+    
+    // Define the sizes of the arrays explicitly
+    const size_t Text_Active_Devices_Size = 16; // Update this number if more elements are added
+    const size_t Text_Inactive_Devices_Size = 16; // Update this number if more elements are added
+
+    // Initialize indices for active and inactive sections
+    size_t activeIndex = 0;
+    size_t inactiveIndex = 0;
+
+    // Loop through the node statuses and write the corresponding values
+    for (const auto& status : nodeStatuses) {
+        // Convert nodeId to string and then to hexadecimal
+        String nodeIdString = String(status.nodeId);
+        String nodeBytes = toHexString(nodeIdString);
+        delay(10);
+
+        if (status.isActive) {
+            // Write to the active device address for this node
+            if (activeIndex < Text_Active_Devices_Size) {
+                writeString(Text_Active_Devices[activeIndex], nodeBytes);
+                activeIndex++;
+            }
+        } else {
+            // Write to the inactive device address for this node
+            if (inactiveIndex < Text_Inactive_Devices_Size) {
+                writeString(Text_Inactive_Devices[inactiveIndex], nodeBytes);
+                inactiveIndex++;
+            }
+        }
+    }
+}
+
+void FyreBoxUnitList() {
+
+    Serial.println("FyreBoxUnitsLists started");
+    
+    while(FyreBoxUnitListFlag) {
+
+        String LCD_RESPONSE = tempreadResponse();
+
+        if(containsPattern(LCD_RESPONSE, Report_Home_Screen))
+		{
+			FyreBoxUnitListFlag = false;
+			Serial.println("FyreBoxUnitListFlag is false ");
+
+            pageSwitch(HOME_PAGE);
+            Serial.println("Page Switched");
+            delay(5);
+		}
+
+        else if(containsPattern(LCD_RESPONSE, VP_ReturnKeyCode)) {
+            if(containsPattern(LCD_RESPONSE, ReturnKeyCode_Active_Next)){
+                Serial.println("ReturnKeyCode_Active_Next");
+
+            }
+            else if(containsPattern(LCD_RESPONSE, ReturnKeyCode_Active_Prev)){
+                Serial.println("ReturnKeyCode_Active_Prev");
+
+            }
+            else if(containsPattern(LCD_RESPONSE, ReturnKeyCode_Inactive_Next)){
+                Serial.println("ReturnKeyCode_Inactive_Next");
+
+            }
+            else if(containsPattern(LCD_RESPONSE, ReturnKeyCode_Inactive_Prev)){
+                Serial.println("ReturnKeyCode_Inactive_Prev");
+
+            }
+        }
+    }
+    Serial.println("FyreBoxUnitsLists completed");
+}
+
 // For LoRa Mesh
 void LoRatask(void* parameter){
     Serial.println("LoRatask Started");
@@ -3709,6 +3828,10 @@ void printNetworkStats() {
     // int totalNodes = nodeStatuses.size();  // Total number of nodes is the size of the vector
     // int activeNodes = 0;
     // int deadNodes = 0;
+
+    totalNodes = 0;
+    activeNodes = 0;
+    deadNodes = 0;
 
     // Count active and dead nodes
     for (const auto& status : nodeStatuses) {

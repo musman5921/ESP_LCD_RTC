@@ -120,6 +120,8 @@ void removeAdminCredentials();
 void saveInternetCredentials(const String& ssid, const String& password);
 bool RememberIcon(uint16_t rememberLogin);
 void showMessage(uint16_t VP_ADDRESS, String displaymessage);
+void displayFyreBoxUnitList();
+void FyreBoxUnitList();
 
 // Not defined
 // void checkConnectButton();

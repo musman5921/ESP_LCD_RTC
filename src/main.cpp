@@ -123,6 +123,10 @@ void setup()
   }
   Serial.println("RTC Initialized.");
 
+  // This line sets the RTC with an explicit date & time
+  // year, month, date, hour, min, sec
+  // rtc.adjust(DateTime(2024, 5, 23, 16, 0, 0));
+
   // Mandatory for gps task
   // if (!rtc.begin()){ // Halt if RTC not found 
   //   Serial.println("Couldn't find RTC");

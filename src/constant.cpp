@@ -473,6 +473,7 @@ bool UnitDetailsFlag = false;
 bool arrowFlags = false;
 bool displayIconsFlag = false;
 bool checkBoxFlag = false;
+bool FyreBoxUnitListFlag = false;
 bool activateSlideShow = false;
 bool slideShowFlag = false;
 bool ConfigureDeviceFlag = false;
@@ -512,3 +513,85 @@ int deadNodes = 0;
 // Pins for RTC
 const int RTC_SDA = 8;
 const int RTC_SCL = 9;
+
+// FyreBox Unit list VPs
+const int Text_Active_Device_1  = 0x3E8D;
+const int Text_Active_Device_2  = 0x3EF1;
+const int Text_Active_Device_3  = 0x3F55;
+const int Text_Active_Device_4  = 0x3FB9;
+const int Text_Active_Device_5  = 0x401D;
+const int Text_Active_Device_6  = 0x4081;
+const int Text_Active_Device_7  = 0x40E5;
+const int Text_Active_Device_8  = 0x4149;
+const int Text_Active_Device_9  = 0x41AD;
+const int Text_Active_Device_10 = 0x4211;
+const int Text_Active_Device_11 = 0x4275;
+const int Text_Active_Device_12 = 0x42D9;
+const int Text_Active_Device_13 = 0x433D;
+const int Text_Active_Device_14 = 0x43A1;
+const int Text_Active_Device_15 = 0x4405;
+const int Text_Active_Device_16 = 0x4469;
+
+// Initialize the arrays with these constants
+const int Text_Active_Devices[] = {
+    Text_Active_Device_1,
+    Text_Active_Device_2,
+    Text_Active_Device_3,
+    Text_Active_Device_4,
+    Text_Active_Device_5,
+    Text_Active_Device_6,
+    Text_Active_Device_7,
+    Text_Active_Device_8,
+    Text_Active_Device_9,
+    Text_Active_Device_10,
+    Text_Active_Device_11,
+    Text_Active_Device_12,
+    Text_Active_Device_13,
+    Text_Active_Device_14,
+    Text_Active_Device_15,
+    Text_Active_Device_16,
+};
+
+const int Text_Inactive_Device_1  = 0x44CD;
+const int Text_Inactive_Device_2  = 0x4531;
+const int Text_Inactive_Device_3  = 0x4595;
+const int Text_Inactive_Device_4  = 0x45F9;
+const int Text_Inactive_Device_5  = 0x465D;
+const int Text_Inactive_Device_6  = 0x46C1;
+const int Text_Inactive_Device_7  = 0x4725;
+const int Text_Inactive_Device_8  = 0x4789;
+const int Text_Inactive_Device_9  = 0x47ED;
+const int Text_Inactive_Device_10 = 0x4851;
+const int Text_Inactive_Device_11 = 0x48B5;
+const int Text_Inactive_Device_12 = 0x4919;
+const int Text_Inactive_Device_13 = 0x497D;
+const int Text_Inactive_Device_14 = 0x49E1;
+const int Text_Inactive_Device_15 = 0x4A45;
+const int Text_Inactive_Device_16 = 0x4AA9;
+
+const int Text_Inactive_Devices[] = {
+    Text_Inactive_Device_1,
+    Text_Inactive_Device_2,
+    Text_Inactive_Device_3,
+    Text_Inactive_Device_4,
+    Text_Inactive_Device_5,
+    Text_Inactive_Device_6,
+    Text_Inactive_Device_7,
+    Text_Inactive_Device_8,
+    Text_Inactive_Device_9,
+    Text_Inactive_Device_10,
+    Text_Inactive_Device_11,
+    Text_Inactive_Device_12,
+    Text_Inactive_Device_13,
+    Text_Inactive_Device_14,
+    Text_Inactive_Device_15,
+    Text_Inactive_Device_16,
+};
+
+const int Text_Units_online  = 0x4B0D;
+
+const String VP_ReturnKeyCode  = "4B1D";
+const String ReturnKeyCode_Active_Next = "1101";
+const String ReturnKeyCode_Active_Prev = "1102";
+const String ReturnKeyCode_Inactive_Next = "1103";
+const String ReturnKeyCode_Inactive_Prev = "1104";

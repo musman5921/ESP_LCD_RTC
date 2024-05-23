@@ -372,6 +372,7 @@ extern bool UnitDetailsFlag;
 extern bool arrowFlags;
 extern bool displayIconsFlag;
 extern bool checkBoxFlag;
+extern bool FyreBoxUnitListFlag;
 extern bool activateSlideShow;
 extern bool slideShowFlag;
 extern bool ConfigureDeviceFlag;
@@ -520,5 +521,53 @@ extern int deadNodes;
  // Pins for RTC
 extern const int RTC_SDA;
 extern const int RTC_SCL;
+
+// FyreBox Unit list VPs
+extern const int Text_Active_Device_1;
+extern const int Text_Active_Device_2;
+extern const int Text_Active_Device_3;
+extern const int Text_Active_Device_4;
+extern const int Text_Active_Device_5;
+extern const int Text_Active_Device_6;
+extern const int Text_Active_Device_7;
+extern const int Text_Active_Device_8;
+extern const int Text_Active_Device_9;
+extern const int Text_Active_Device_10;
+extern const int Text_Active_Device_11;
+extern const int Text_Active_Device_12;
+extern const int Text_Active_Device_13;
+extern const int Text_Active_Device_14;
+extern const int Text_Active_Device_15;
+extern const int Text_Active_Device_16;
+
+// Initialize the arrays with these constants
+extern const int Text_Active_Devices[];
+
+extern const int Text_Inactive_Device_1;
+extern const int Text_Inactive_Device_2;
+extern const int Text_Inactive_Device_3;
+extern const int Text_Inactive_Device_4;
+extern const int Text_Inactive_Device_5;
+extern const int Text_Inactive_Device_6;
+extern const int Text_Inactive_Device_7;
+extern const int Text_Inactive_Device_8;
+extern const int Text_Inactive_Device_9;
+extern const int Text_Inactive_Device_10;
+extern const int Text_Inactive_Device_11;
+extern const int Text_Inactive_Device_12;
+extern const int Text_Inactive_Device_13;
+extern const int Text_Inactive_Device_14;
+extern const int Text_Inactive_Device_15;
+extern const int Text_Inactive_Device_16;
+
+extern const int Text_Inactive_Devices[];
+
+extern const int Text_Units_online;
+
+extern const String VP_ReturnKeyCode;
+extern const String ReturnKeyCode_Active_Next;
+extern const String ReturnKeyCode_Active_Prev;
+extern const String ReturnKeyCode_Inactive_Next;
+extern const String ReturnKeyCode_Inactive_Prev;
 
 #endif // CONSTANTS_H
