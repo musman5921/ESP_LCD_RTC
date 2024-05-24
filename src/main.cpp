@@ -5,50 +5,61 @@
  File --------------- Main File (Code Exceution Start in this file)
  Company -----------  Machadev Pvt Limited
 
-	Firmware Details
+Firmware Details
 
-	Implemented:
-  All tasks are suspended except login task
-  if login task is completed then moving to the next task to configure device
-  in configure device company details, manufacture details, unit details and device direction are called
-  once device is configured it will jump into infinite loop of slide show until touch on screen is not detected
-  if touch is detected then moving to the next task to handle homepage tasks
+Implemented:
 
-  working on login credentials to save, load and autofill credential details of client and admin panel.
-  working on WiFi credentials to save, load and autofill ssid and password.
+- LoRa Task: Pinned to Core 1 to frequently update the mesh network.
+- Task Management:
+  - All tasks are suspended except for the login task.
+  - Upon completion of the login task, the device configuration task is initiated.
+  - In the configuration task, company details, manufacturer details, unit details, and device direction are set.
+  - Once the device is configured, it enters an infinite slideshow loop until a screen touch is detected.
+  - If a touch is detected, it proceeds to handle homepage tasks.
 
-Developed a mesh network using Ebyte LoRa E32 with ESP32
-The logic is same for each node
+  - If the LoRa module is not found, the system will remain in a loop and retry until the module is detected.
+  - If the RTC module is not found, the system will remain in a loop and retry until the module is detected.
+
+Mesh Network Development:
+
+- Developed a mesh network using Ebyte LoRa E32 with ESP32.
+- The same logic applies to each node.
 
 Flow:
-The mesh network program is same for all nodes in the network
-  Each node listen to other nodes in a loop
-  Each node update activity of other nodes after every 10 seconds
-  Each node broadcast message after every 30 seconds
-  Each node print stats of network after every 60 seconds
+
+- The mesh network program is identical for all nodes in the network:
+  - Each node listens to other nodes in a loop.
+  - Each node updates the activity status of other nodes every 10 seconds.
+  - Each node broadcasts a message every 30 seconds.
+  - Each node prints network stats every 60 seconds.
 
 Tests:
-The network contains 4 nodes
-  Each node knows how many nodes are available, active and dead in his network
-  Each node successfully updates its node info container after every 60 seconds
-  
-platformio:
-  board selected: espressif esp32 dev module 
-  monitor speed: 115200
 
-Escalator node:
-AUX pin of LoRa module is NOT connected with ESP32 
-Relay is active Low
-and an led is connected in series with relay
+- The network consists of 4 nodes:
+  - Each node knows how many nodes are available, active, and dead in its network.
+  - Each node successfully updates its node info container every 60 seconds.
+  - Note: There is no acknowledgment message for broadcasted messages.
 
-no ack if message is broadcasted
+PlatformIO Configuration:
 
-FyreBox node:
-AUX pin of LoRa module is NOT connected with ESP32 S3 mini
-Serial0 is for program uploading and debugging
-DWIN LCD is connected at IO15(TX) and IO16(RX) Serial1
-LoRa module is connecetd at IO35(RX) and IO36(TX) Using software serial
-SIG pin must be HIGH IO5 for the sdcard to connect with the DWIN LCD
+[env:esp32-s3-devkitm-1]
+platform = espressif32
+board = esp32-s3-devkitm-1
+framework = arduino
+monitor_speed = 115200
+
+Escalator Node:
+
+- The AUX pin of the LoRa module is NOT connected to the ESP32.
+- The relay is active low, with an LED connected in series with the relay.
+
+FyreBox Node:
+
+- The AUX pin of the LoRa module is NOT connected to the ESP32 S3 Mini.
+- Serial0: Used for program uploading and debugging.
+- Serial1: DWIN LCD is connected at IO15 (TX of LCD) and IO16 (RX of LCD).
+- LoRa Module: Connected at IO35 (RX) and IO36 (TX) using software serial.
+- SD Card Connection: The SIG pin must be HIGH (IO5) for the SD card to connect with the DWIN LCD.
 
 */
 
@@ -60,17 +71,8 @@ SIG pin must be HIGH IO5 for the sdcard to connect with the DWIN LCD
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-// #include <SPI.h>
-// Main Code is Running Here
-
-// temp only for testing
-const char* ssid = "Machadev";
-const char* password = "13060064"; 
-
 // Initialize and define SoftwareSerial object
 SoftwareSerial SerialGPS(GPSRXPin, GPSTXPin); // not currently used
-
-// Initialize and define SoftwareSerial object
 SoftwareSerial LoRaSerial(LORA_TX_PIN, LORA_RX_PIN); // ESP32(RX), ESP32(TX)
 
 // Setup Function: Call Once when Code Starts
@@ -90,10 +92,9 @@ void setup()
 
   // Start the Serial Communication with LoRa module
   LoRaSerial.begin(9600);
+  Serial.println("LoRaSerial is ready.");
 
-  // Serial2.begin(9600, SERIAL_8N1, LORA_RX_PIN, LORA_TX_PIN);
-  // Serial.println("Serial2 is ready.");
-
+  // Init driver(LoRa E32) and mesh manager
   Serial.println("Initializing mesh");
   while(! initializeMESH()){  // stays in a loop until LoRa found 
     Serial.println("Mesh initialization failed");
@@ -102,15 +103,7 @@ void setup()
    }
   Serial.println("Mesh initialized successfully.");
 
-  // Serial.println("Initializing mesh...");
-  // if(! initializeMESH()){ // Halt if LoRa not found 
-  //   Serial.println("Mesh initialization failed");
-  //   Serial.println("Freezing...");
-  //   while(1);
-  // }
-  // Serial.println("Mesh initialized successfully.");
-
-  // testing RTC
+  // RTC pins for ESP32-S3-Mini
   Wire.begin(RTC_SDA, RTC_SCL);
   delay(5);
 
@@ -123,17 +116,8 @@ void setup()
   }
   Serial.println("RTC Initialized.");
 
-  // This line sets the RTC with an explicit date & time
-  // year, month, date, hour, min, sec
+  // This line sets date and time on RTC (year, month, date, hour, min, sec)
   // rtc.adjust(DateTime(2024, 5, 23, 16, 0, 0));
-
-  // Mandatory for gps task
-  // if (!rtc.begin()){ // Halt if RTC not found 
-  //   Serial.println("Couldn't find RTC");
-  //   Serial.println("Freezing...");
-  //   while (1);
-  // }
-  // Serial.println("RTC Initialized");
 
   EEPROM.begin(512); // Initialize EEPROM
   preferences.begin("credentials", false); // Open Preferences with "credentials" namespace
@@ -143,16 +127,14 @@ void setup()
   delay(5);
 
   xTaskCreatePinnedToCore(LoRatask, "LoRatask", 4096, NULL, 1, &xHandleLoRa, 1);
-  // xTaskCreate(LoRatask, "LoRatask", 4096, NULL, 1, &xHandleLoRa);
 
   xTaskCreate(loginTask, "LoginTask", 4096, NULL, 2, &xHandlelogin);
   
   // xTaskCreate(checkGPSTask, "CheckGPS", 2048, NULL, 1, &xHandlegps);
   // vTaskSuspend(xHandlegps);
   
-  xTaskCreate(dateTimeTask, "DateTimeTask", 2048, NULL, 1, &xHandledatetime);
+  xTaskCreate(dateTimeTask, "DateTimeTask", 2048, NULL, 4, &xHandledatetime);
   vTaskSuspend(xHandledatetime);
-  // vTaskDelete(xHandledatetime); // only for testing
 
   xTaskCreate(configuredeviceTask, "ConfigureDeviceTask", 4096, NULL, 3, &xHandleconfigdevice);
   vTaskSuspend(xHandleconfigdevice);
@@ -218,26 +200,15 @@ void setup()
 
   activateSlideShow = true;
 
-  // Connect to WiFi
-  // WiFi.begin(ssid, password);
-  // while (WiFi.status() != WL_CONNECTED)
-  // {
-  //     delay(1000);
-  //     Serial.println("Connecting to WiFi...");
-  // }
-  // Serial.println("Connected to WiFi");
-
-  // pageSwitch(HOME_PAGE);
-  // Serial.println("Page Switched");
-  // delay(5);
-
   // Only for testing of checklists data entery
   // EEPROM.write(EEPROMAddress, 0);
   // EEPROM.commit(); // Commit changes
 
+  // Only for testing of configureInternet();
   // preferences.putString("internetSSID", " ");
   // preferences.putString("internetPass", " ");
 
+  // Only for testing of configureLogin();
   // removeClientCredentials();
   // removeAdminCredentials();
   

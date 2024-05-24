@@ -104,6 +104,7 @@ void loginTask(void *parameter);
 void readeyeIcon(String temppassword, uint16_t passwordvp, uint16_t passwordIcon, uint16_t passwordDisplay);
 void connectInternet();
 void configureInternet();
+void configureLogin();
 void configuredeviceTask(void *parameter);
 void companyDetails();
 void manufactureDetails();

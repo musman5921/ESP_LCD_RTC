@@ -1267,8 +1267,13 @@ void loginTask(void *parameter)
                     message3 = "Login Fail"; // Wait here and get login credentials again
                     showMessage(notificationStatus3, message3);
                     delay(1000);
-
                     pageSwitch(CLIENTPAGE);
+                    configureLogin();
+
+                    pageSwitch(NOTIFICATION_PAGE);
+                    String LoginStatus = "Login Success";
+                    showMessage(notificationStatus3, LoginStatus);
+                    delay(1000);
                 }
             }
 
@@ -1304,7 +1309,7 @@ void loginTask(void *parameter)
             break;
             
         }
-
+/*
         // Switch user show admin
         else if(containsPattern(checkData, switchUser) && containsPattern(checkData, showAdmin)) 
         {
@@ -1615,7 +1620,7 @@ void loginTask(void *parameter)
             clientLogin = false;
             adminLogin = false;
         }
-
+*/
         if(uniqueKeyFlag)
         {
             Serial.println("Start Config Device");
@@ -1833,6 +1838,346 @@ void configureInternet()
         }
     }
     Serial.println("configureInternet Completed"); 
+}
+
+void configureLogin() {
+
+    Serial.println("configureLogin started");
+
+    // resetVP(ADMIN_SSID);
+    // resetVP(ADMIN_PASSWORD);
+    // resetVP(ADMIN_PASSWORD_DISPLAY);
+    // resetVP(adminLoginStatus);
+
+    // resetVP(CLIENT_SSID);
+    // resetVP(CLIENT_PASSWORD);
+    // resetVP(CLIENT_PASSWORD_DISPLAY);
+    // resetVP(clientLoginStatus);
+
+    while(true) {
+
+        checkData = tempreadResponse();
+
+        // Ack response from lcd
+        if(checkData == "5aa53824f4b")
+        {
+            checkData = "";
+        }
+
+        // Switch user show admin
+        if(containsPattern(checkData, switchUser) && containsPattern(checkData, showAdmin)) 
+        {
+            resetVP(ADMIN_SSID);
+            resetVP(ADMIN_PASSWORD);
+            resetVP(ADMIN_PASSWORD_DISPLAY);
+            resetVP(adminLoginStatus);
+            delay(100);
+            
+            // Get Admin info
+            String tempAdminusername = preferences.getString("admin_username", "");
+            String tempAdminpassword = preferences.getString("admin_password", "");
+            delay(100);
+            
+            Serial.println("Saved Admin username is: "+ tempAdminusername);
+            Serial.println("Saved Admin password is: "+ tempAdminpassword);
+            delay(100);
+            
+            String hexdataAdminusername = toHexString(tempAdminusername);
+            writeString(ADMIN_SSID, hexdataAdminusername); // Display Admin's username
+            delay(100);
+
+            readeyeIcon(tempAdminpassword, ADMIN_PASSWORD, ADMIN_PASSWORD_ICON, ADMIN_PASSWORD_DISPLAY);
+
+            pageSwitch(ADMINPAGE);
+        }
+
+        // Switch user show client
+        else if(containsPattern(checkData, switchUser) && containsPattern(checkData, showClient))
+        {
+            resetVP(CLIENT_SSID);
+            resetVP(CLIENT_PASSWORD);
+            resetVP(CLIENT_PASSWORD_DISPLAY);
+            resetVP(clientLoginStatus);
+            delay(100);
+
+            // Get client info
+            String tempClientusername = preferences.getString("client_username", "");
+            String tempClientpassword = preferences.getString("client_password", "");
+            delay(100);
+
+            Serial.println("Saved client username is: "+ tempClientusername);
+            Serial.println("Saved client password is: "+ tempClientpassword);
+            delay(100);
+            
+            String hexdataClientusername = toHexString(tempClientusername);
+            writeString(CLIENT_SSID, hexdataClientusername); // Display client's username
+            delay(100);
+
+            readeyeIcon(tempClientpassword, CLIENT_PASSWORD, CLIENT_PASSWORD_ICON, CLIENT_PASSWORD_DISPLAY);
+
+            pageSwitch(CLIENTPAGE);
+        }
+            
+        // Client panel or admin panel
+        else if (containsPattern(checkData, "ffff"))
+        {
+            resetVP(CLIENT_PASSWORD_DISPLAY);
+            // resetVP(ADMIN_PASSWORD_DISPLAY);
+            delay(100);
+            String vpAddress = processFourthAndFifthBytes(checkData);
+            Serial.println("Vp Address :" + vpAddress);
+            if (vpAddress == "3164")
+            {
+                Serial.println("Client Panel");
+                delay(100);
+                startCheckingPassword(CLIENT_PASSWORD_DISPLAY, CLIENT_PASSWORD_ICON, checkData);
+            }
+            else if (vpAddress == "332f")
+            {
+                Serial.println("Admin Panel");
+                delay(100);
+                startCheckingPassword(ADMIN_PASSWORD_DISPLAY, ADMIN_PASSWORD_ICON, checkData);
+            }
+        }
+
+        // Client password show/hide icons
+        else if (containsPattern(checkData, "31c8"))
+        {
+            Serial.println("In client Icon");
+            delay(100);
+            processPasswordDisplay(CLIENT_PASSWORD, CLIENT_PASSWORD_DISPLAY, CLIENT_PASSWORD_ICON);
+        }
+
+        // Admin password show/hide icons
+        else if (containsPattern(checkData, "3393"))
+        {
+            Serial.println("In admin Icon");
+            delay(100);
+            processPasswordDisplay(ADMIN_PASSWORD, ADMIN_PASSWORD_DISPLAY, ADMIN_PASSWORD_ICON);
+        }
+
+        // Admin/Client login button
+        else if (containsPattern(checkData, "31ca"))
+        {
+            if (checkLastFourDigitsMatch(checkData, clientPanelDigits))
+            {
+                Serial.println("Data from client login button");
+                clientLogin = true;
+
+                if (RememberIcon(CLIENT_REMEMBER_LOGIN))
+                    rememberClient = true;
+                else
+                    rememberClient = false;
+            }
+            else if (checkLastFourDigitsMatch(checkData, adminPanelDigits))
+            {
+                Serial.println("Data from admin login button");
+                adminLogin = true;
+                
+                if (RememberIcon(ADMIN_REMEMBER_LOGIN))
+                    rememberAdmin = true;
+                else
+                    rememberAdmin = false;
+            }
+        }
+
+        // Client Login Mode
+        if (clientLogin && wifiConnectedFlag)
+        {
+            Serial.println("Client Login Mode");
+            delay(100);
+
+            processClientLogin(CLIENT_SSID, CLIENT_PASSWORD, CLIENT_PASSWORD_DISPLAY, CLIENT_PASSWORD_ICON);
+
+            String tempusernameClient = preferences.getString("client_username", "");
+            String temppasswordClient = preferences.getString("client_password", "");
+            
+            Serial.println("Saved username for client login: "+ tempusernameClient);
+            Serial.println("Saved password for client login: "+ temppasswordClient);
+            delay(100);
+            
+            if (compareCredentials(tempusernameClient, temppasswordClient))
+            {
+                if(rememberClient)
+                {
+                    saveClientCredentials(tempusernameClient, temppasswordClient);
+                }
+                else if(!rememberClient)
+                {
+                    removeClientCredentials();
+                }
+                
+                String LoginStatus = "Login Success";
+                String LoginStatusBytes = toHexString(LoginStatus);
+                writeString(clientLoginStatus, LoginStatusBytes);
+                delay(1000);
+                resetVP(clientLoginStatus);
+                /*
+                pageSwitch(UNIQUE_KEY_PAGE);
+
+                while (true)
+                {
+                    delay(100);
+                    String uniqueButton = tempreadResponse();
+                    Serial.println("Data from uniqueButton: " + uniqueButton);
+                    
+                    if (containsPattern(uniqueButton, uniqueButtonDigits))
+                    {
+                        delay(100);
+                        String uniqueData = readOneData(UNIQUE_KEY);
+                        delay(100);
+                        storedUniqueData = uniqueData;
+
+                        if (storedUniqueData != uniqueData)
+                        {
+                            resetVP(clientLoginStatus);
+                            Serial.println("Database Data is . " + storedUniqueData);
+                            Serial.println("Unique button pressed. Updating data. " + uniqueData);
+                            Serial.println("Device Failed to Connect to Fyrebox Network");
+                            String LoginStatus = "Device Failed to Connect to Fyrebox Network";
+                            String LoginStatusBytes = toHexString(LoginStatus);
+                            delay(100);
+                            writeString(clientLoginStatus, LoginStatusBytes);
+                            delay(100);
+                            Serial.println("Updating Device:");
+                            storedUniqueData = uniqueData;
+                            Serial.println("Database Updated is . " + storedUniqueData);
+                            continue;
+                        }
+                        else
+                        {
+                            resetVP(clientLoginStatus);
+                            delay(5);
+                            Serial.println("Updated Unique Data: " + storedUniqueData);
+                            Serial.println("Device Succesfully Added to Fyrebox Network");
+                            String LoginStatus = "Device Succesfully Added to Fyrebox Network";
+                            String LoginStatusBytes = toHexString(LoginStatus);
+                            delay(100);
+                            writeString(clientLoginStatus, LoginStatusBytes);
+                            delay(1000);
+                            uniqueKeyFlag = true;
+                            resetVP(clientLoginStatus);
+                            break;
+                        }
+                    }
+                }
+                */
+                break;
+            }
+
+            else
+            {
+                String LoginStatus = "Login Fail";
+                String LoginStatusBytes = toHexString(LoginStatus);
+                delay(100);
+                writeString(clientLoginStatus, LoginStatusBytes);
+            }
+            
+            delay(10);
+            sendWriteCommand(LOGIN, RESET);
+            adminLogin = false;
+            clientLogin = false;
+        }
+
+        // Admin Login Mode
+        else if (adminLogin && wifiConnectedFlag)
+        {
+            Serial.println("Admin Login Mode");
+            delay(100);
+            
+            processAdminLogin(ADMIN_SSID, ADMIN_PASSWORD, ADMIN_PASSWORD_DISPLAY, ADMIN_PASSWORD_ICON);
+
+            String tempusernameAdmin = preferences.getString("admin_username", "");
+            String temppasswordAdmin = preferences.getString("admin_password", "");
+            
+            Serial.println("Saved username for admin login: "+ tempusernameAdmin);
+            Serial.println("Saved password for admin login: "+ temppasswordAdmin);
+            delay(100);
+            
+            if(compareCredentials(tempusernameAdmin, temppasswordAdmin))
+            {
+                if(rememberAdmin)
+                {
+                    saveAdminCredentials(tempusernameAdmin, temppasswordAdmin);
+                }
+                else if(!rememberAdmin)
+                {
+                    removeAdminCredentials();
+                }
+                
+                String LoginStatus = "Login Success";
+                String LoginStatusBytes = toHexString(LoginStatus);
+                writeString(adminLoginStatus, LoginStatusBytes);
+                delay(1000);
+                resetVP(adminLoginStatus);
+                /*
+                pageSwitch(UNIQUE_KEY_PAGE);
+
+                while (true)
+                {
+                    delay(100);
+                    String uniqueButton = tempreadResponse();
+                    Serial.println("Data from uniqueButton: " + uniqueButton);
+
+                    if (checkLastFourDigitsMatch(uniqueButton, uniqueButtonDigits))
+                    {
+                        delay(100);
+                        String uniqueData = readOneData(UNIQUE_KEY);
+                        delay(100);
+                        storedUniqueData = uniqueData;
+
+                        if (storedUniqueData != uniqueData)
+                        {
+                            resetVP(clientLoginStatus);
+                            Serial.println("Database Data is . " + storedUniqueData);
+                            Serial.println("Unique button pressed. Updating data. " + uniqueData);
+                            Serial.println("Device Failed to Connect to Fyrebox Network");
+                            String LoginStatus = "Device Failed to Connect to Fyrebox Network";
+                            String LoginStatusBytes = toHexString(LoginStatus);
+                            delay(100);
+                            writeString(clientLoginStatus, LoginStatusBytes);
+                            delay(100);
+                            Serial.println("Updating Device:");
+                            storedUniqueData = uniqueData;
+                            Serial.println("Database Updated is . " + storedUniqueData);
+                            continue;
+                        }
+                        else
+                        {
+                            resetVP(clientLoginStatus);
+                            delay(5);
+                            Serial.println("Updated Unique Data: " + storedUniqueData);
+                            Serial.println("Device Succesfully Added to Fyrebox Network");
+                            String LoginStatus = "Device Succesfully Added to Fyrebox Network";
+                            String LoginStatusBytes = toHexString(LoginStatus);
+                            delay(100);
+                            writeString(clientLoginStatus, LoginStatusBytes);
+                            delay(1000);
+                            uniqueKeyFlag = true;
+                            resetVP(clientLoginStatus);
+                            break;
+                        }
+                    }
+                }
+                */
+                break;
+            }
+
+            else
+            {
+                String LoginStatus = "Login Fail";
+                String LoginStatusBytes = toHexString(LoginStatus);
+                delay(100);
+                writeString(adminLoginStatus, LoginStatusBytes);
+            }
+            
+            delay(10);
+            sendWriteCommand(LOGIN, RESET);
+            clientLogin = false;
+            adminLogin = false;
+        }
+    }
+    Serial.println("configureLogin completed");
 }
 
 void configuredeviceTask(void *parameter)
@@ -2652,19 +2997,38 @@ void homepageTasks(void *parameter)
             // Handle Logout 
             else if (containsPattern(checkData, logout))
             {
+                adminLogin = false;
+                clientLogin = false;
+
+                // remove credentials
+                removeClientCredentials();
+                removeAdminCredentials();
+
+                resetVP(ADMIN_SSID);
+                resetVP(ADMIN_PASSWORD);
+                resetVP(ADMIN_PASSWORD_DISPLAY);
+                resetVP(adminLoginStatus);
+
+                resetVP(CLIENT_SSID);
+                resetVP(CLIENT_PASSWORD);
+                resetVP(CLIENT_PASSWORD_DISPLAY);
+                resetVP(clientLoginStatus);
+  
                 pageSwitch(CLIENTPAGE);
                 Serial.println("Page Switched");
                 delay(5);
 
                 Serial.println("Suspend date time Task");
-                vTaskSuspend(xHandledatetime); 
+                vTaskSuspend(xHandledatetime); // Not needed while login
                 delay(100);
 
-                Serial.println("Start login Task");
-                vTaskResume(xHandlelogin); // Resume the next task before exit
+                configureLogin();
+
+                Serial.println("Resume date time Task");
+                vTaskResume(xHandledatetime); // Login Completed
                 delay(100);
-                
-                break;
+
+                pageSwitch(HOME_PAGE);
             }
         }
 
@@ -3619,8 +3983,8 @@ void displayFyreBoxUnitList() {
     writeString(Text_Units_online, unitsOnlineBytes);
     
     // Define the sizes of the arrays explicitly
-    const size_t Text_Active_Devices_Size = 16; // Update this number if more elements are added
-    const size_t Text_Inactive_Devices_Size = 16; // Update this number if more elements are added
+    const size_t Text_Active_Devices_Size = 16; 
+    const size_t Text_Inactive_Devices_Size = 16; 
 
     // Initialize indices for active and inactive sections
     size_t activeIndex = 0;
@@ -3630,7 +3994,8 @@ void displayFyreBoxUnitList() {
     for (const auto& status : nodeStatuses) {
         // Convert nodeId to string and then to hexadecimal
         String nodeIdString = String(status.nodeId);
-        String nodeBytes = toHexString(nodeIdString);
+        String message = "Node ID " + nodeIdString;
+        String nodeBytes = toHexString(message);
         delay(10);
 
         if (status.isActive) {
@@ -3667,24 +4032,36 @@ void FyreBoxUnitList() {
             delay(5);
 		}
 
-        else if(containsPattern(LCD_RESPONSE, VP_ReturnKeyCode)) {
-            if(containsPattern(LCD_RESPONSE, ReturnKeyCode_Active_Next)){
-                Serial.println("ReturnKeyCode_Active_Next");
-
-            }
-            else if(containsPattern(LCD_RESPONSE, ReturnKeyCode_Active_Prev)){
-                Serial.println("ReturnKeyCode_Active_Prev");
-
-            }
-            else if(containsPattern(LCD_RESPONSE, ReturnKeyCode_Inactive_Next)){
-                Serial.println("ReturnKeyCode_Inactive_Next");
-
-            }
-            else if(containsPattern(LCD_RESPONSE, ReturnKeyCode_Inactive_Prev)){
-                Serial.println("ReturnKeyCode_Inactive_Prev");
-
+        else if(containsPattern(LCD_RESPONSE, VP_ReturnKeyCode)) 
+        {
+            while(true)
+            {
+                if(containsPattern(LCD_RESPONSE, ReturnKeyCode_Active_Next)){
+                    Serial.println("ReturnKeyCode_Active_Next");
+                    break;
+                }
+                else if(containsPattern(LCD_RESPONSE, ReturnKeyCode_Active_Prev)){
+                    Serial.println("ReturnKeyCode_Active_Prev");
+                    break;
+                }
+                else if(containsPattern(LCD_RESPONSE, ReturnKeyCode_Inactive_Next)){
+                    Serial.println("ReturnKeyCode_Inactive_Next");
+                    break;
+                }
+                else if(containsPattern(LCD_RESPONSE, ReturnKeyCode_Inactive_Prev)){
+                    Serial.println("ReturnKeyCode_Inactive_Prev");
+                    break;
+                }
             }
         }
+        // static unsigned long lastUpdateTime = 0;
+        // unsigned long currentMillis = millis();
+
+        // if(currentMillis - lastUpdateTime > 60000)
+        // {
+        //     displayFyreBoxUnitList();
+        //     lastUpdateTime = currentMillis;
+        // }
     }
     Serial.println("FyreBoxUnitsLists completed");
 }
@@ -3713,6 +4090,7 @@ void LoRatask(void* parameter){
         if (currentMillis - lastStatusPrintTime > 60000) {  // Every 60 seconds
             // printNodeStatuses();  // Print the statuses of all nodes
             printNetworkStats(); 
+            displayFyreBoxUnitList();
             lastStatusPrintTime = currentMillis;
         }
     }
