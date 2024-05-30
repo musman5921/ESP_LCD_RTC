@@ -15,6 +15,7 @@
 // #define Baud_RATE_SERIAL  9600
 // #define Baud_RATE_DISPLAY  9600
 
+extern TaskHandle_t xHandleAudio;
 extern TaskHandle_t xHandleLoRa;
 extern TaskHandle_t xHandlegps;
 extern TaskHandle_t xHandledatetime;
@@ -234,6 +235,11 @@ extern const int CHECKLISTPAGE5;
 extern const int CLIENTPAGE;
 extern const int ADMINPAGE;
 extern const int NOTIFICATION_PAGE;
+extern const int LOCALMAP_PAGE; 
+extern const int SITEMAP_PAGE;
+extern const int EVACUATION_PROCEDURE_PAGE;
+extern const int CLIENT_LOGO;
+extern const int FYREBOXLOGO;
 
 extern const int VP_UNIT_DATE;
 extern const int VP_UNIT_TIME;
@@ -569,5 +575,43 @@ extern const String ReturnKeyCode_Active_Next;
 extern const String ReturnKeyCode_Active_Prev;
 extern const String ReturnKeyCode_Inactive_Next;
 extern const String ReturnKeyCode_Inactive_Prev;
+
+// RGB LED configuration
+// extern const int DATA_PIN_RGB1;
+// extern const int DATA_PIN_RGB2;
+// extern const int DATA_PIN_RGB3;
+// extern const int DATA_PIN_RGB4;
+// extern const int DATA_PIN_RGB5;
+// extern const int DATA_PIN_RGB6;
+// extern const int NUM_LEDS;
+// extern const int RGB_LED_BRIGHTNESS;
+
+// Digital I/O used for SD Card
+extern const int SD_CS;
+extern const int SPI_MOSI;
+extern const int SPI_MISO;
+extern const int SPI_SCK;
+
+// Digital I/O used for Audio
+extern const int I2S_DOUT;
+extern const int I2S_BCLK;
+extern const int I2S_LRC;
+
+// Audio Data
+extern const char *resourceURL;
+extern const char *filename;
+extern const char *resourceURL2;
+extern const char *filename2;
+
+extern const int SirenPIN;
+extern const int siteEvacuation_buttonPin;
+
+// button memory variables
+extern int buttonState; // Current state of the button (initially not pressed, because INPUT_PULLUP)
+extern int lastButtonState; // Previous state of the button (initially not pressed)
+extern bool evacuationActive; // Flag to track if evacuation is active
+
+extern unsigned long lastDebounceTime; // the last time the output pin was toggled
+extern unsigned long debounceDelay; // the debounce time; increase if the output flickers
 
 #endif // CONSTANTS_H

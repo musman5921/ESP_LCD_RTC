@@ -8,6 +8,7 @@
 
 #include "constant.h"
 
+TaskHandle_t xHandleAudio;
 TaskHandle_t xHandleLoRa;
 TaskHandle_t xHandlegps;
 TaskHandle_t xHandledatetime;
@@ -86,8 +87,10 @@ const String showAdmin = "1102";
 const String switchUser = "2ec";
 const String uniqueButtonDigits = "1101";
 
-const String predefinedInternetSSID = "Machadev";
-const String predefinedInternetPassword = "13060064";
+// const String predefinedInternetSSID = "Machadev";
+// const String predefinedInternetPassword = "13060064";
+const String predefinedInternetSSID = "Redmi Note 12";
+const String predefinedInternetPassword = "11223344";
 const String showPassword = "103";
 const String hidePassword = "102";
 
@@ -435,6 +438,7 @@ const String createAlertUrl = AlertBaseUrl + "device_id=" + deviceId + "&alert_t
 const String devicesDetailsUrl = getDataBaseUrl + "operation=" + getOperation + "&org_id=" + orgid;
 
 // Define Page Number
+const int FYREBOXLOGO = 0x0000;
 const int COPYRIGHT = 0x0001;
 const int CLIENTPAGE = 0x0003;
 const int ADMINPAGE = 0x0004;
@@ -458,6 +462,10 @@ const int CHECKLISTPAGE5 = 0x001F;
 const int SHOW_REPORT_PAGE = 0x0020;
 const int MENU_PAGE = 0x0025;
 const int NOTIFICATION_PAGE = 0x0018;
+const int LOCALMAP_PAGE = 0x002A; 
+const int SITEMAP_PAGE = 0x0016; 
+const int EVACUATION_PROCEDURE_PAGE = 0x0017;
+const int CLIENT_LOGO = 0x002B;
 
 // Flags
 bool clientLogin = false;
@@ -595,3 +603,46 @@ const String ReturnKeyCode_Active_Next = "1101";
 const String ReturnKeyCode_Active_Prev = "1102";
 const String ReturnKeyCode_Inactive_Next = "1103";
 const String ReturnKeyCode_Inactive_Prev = "1104";
+
+
+// RGB LED configuration
+// const int DATA_PIN_RGB1 = 21;
+// const int DATA_PIN_RGB2 = 26;
+// const int DATA_PIN_RGB3 = 47;
+// const int DATA_PIN_RGB4 = 33;
+// const int DATA_PIN_RGB5 = 34;
+// const int DATA_PIN_RGB6 = 20;
+// const int NUM_LEDS = 8;
+// const int RGB_LED_BRIGHTNESS = 10;
+
+// Digital I/O used for SD Card
+const int SPI_MOSI  = 11;
+const int SPI_MISO  = 12;
+const int SPI_SCK   = 13;
+const int SD_CS     = 14;
+
+// Digital I/O used for Audio
+const int I2S_BCLK = 17;
+const int I2S_DOUT = 18;
+const int I2S_LRC = 19;
+
+// Audio Data
+// const char *resourceURL = "https://github.com/asif8270/audioWav/raw/main/emergency.mp3";
+// const char *filename = "/emergency.mp3";
+
+const char *resourceURL ="https://github.com/musman5921/audio/raw/main/Fyrebox_-_Fyrebox_Alarm_with_Siren.mp3";
+const char *filename = "/Fyrebox_-_Fyrebox_Alarm_with_Siren.mp3";
+const char *resourceURL2 ="https://github.com/musman5921/audio/raw/main/Fyrebox_-_Fyrebox_Alarm_VO_TEST.mp3";
+const char *filename2 = "/Fyrebox_-_Fyrebox_Alarm_VO_TEST.mp3";
+
+const int SirenPIN = 4;
+
+const int siteEvacuation_buttonPin = 21; // Pin where the push button is connected
+
+// button memory variables
+int buttonState = HIGH; // Current state of the button (initially not pressed, because INPUT_PULLUP)
+int lastButtonState = HIGH; // Previous state of the button (initially not pressed)
+bool evacuationActive = false; // Flag to track if evacuation is active
+
+unsigned long lastDebounceTime = 0; // the last time the output pin was toggled
+unsigned long debounceDelay = 50; // the debounce time; increase if the output flickers

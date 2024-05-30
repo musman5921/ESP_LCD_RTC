@@ -17,6 +17,14 @@
 #include <RTClib.h>
 #include <SoftwareSerial.h>
 #include <Preferences.h>
+#include <FastLED.h>
+#include "Audio.h"
+#include "esp32-hal-cpu.h"
+#include "freertos/semphr.h"
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+#include <Adafruit_Sensor.h>
+#include <HardwareSerial.h>
 
 // For LoRa Mesh networking
 #include <RH_E32.h>
@@ -30,6 +38,10 @@ extern SoftwareSerial LoRaSerial;
 extern RHMesh mesh;
  
 extern Preferences preferences;
+
+extern Audio audio;
+extern AudioBuffer InBuff;
+extern SemaphoreHandle_t audioSemaphore;
 
 struct Credentials 
 {
@@ -77,7 +89,7 @@ String readOneData(uint16_t ssidCommand);
 void performLoginCheck(bool &clientLogin, bool &adminLogin);
 void readPage();
 void pageSwitch(byte pageNo);
-void iconDisplay(byte iconNo);
+void DisplayDeactivateIcon();
 void systemReset();
 bool compareCredentials(String ssid, String password);
 bool compareInternetCredentials(String ssid, String password);
@@ -111,6 +123,7 @@ void manufactureDetails();
 void unitDetails();
 void devicesDirectionDetails();
 void slideShow();
+void slideShow_EvacuationDiagrams();
 void homepageTasks(void *parameter);
 void CheckBoxes();
 void displayIcons();
@@ -141,5 +154,32 @@ void listenForNodes();
 size_t getTotalNodes();
 void printNodeStatuses();
 void printNetworkStats();
+
+// Led functions
+void setupLeds(); // used
+// void setAllLedsRed(); 
+// void setAllLedsBlue();
+// void setAllLedsGreen();
+// void setAllLedYellow();
+// void setAllLedWhite(); 
+// void turnOffAllLeds();
+// void stableWhite(); 
+// void stableRed();
+// void stableGreen();
+// void stableBlue();
+// void stableYellow();
+// void led_blink(uint8_t red_intensity, uint8_t green_intensity, uint8_t blue_intensity);
+
+void FillSolidLeds(struct CRGB * targetArray, int numToFill, const struct CRGB& color);
+
+void initAudio();
+void download_audio();
+void sd_card();
+void downloadFile(const char *resourceURL, const char *filename);
+void audioTask(void * parameter);
+void startSiren();
+void stopSiren();
+void palyAudio();
+
 
 #endif // LCD_H

@@ -20,6 +20,45 @@ RHMesh mesh(driver, NODEID); // Node ID
 
 std::vector<NodeStatus> nodeStatuses;
 
+Audio audio;
+AudioBuffer InBuff;
+SemaphoreHandle_t audioSemaphore;
+
+// 24 X LEDs for each of the sides - so 24x 2 (each side). Always on in white. Activation, flashing red. (48 total)
+
+// 3  X LEDS for the big hexagon (always on in white) always on (3 total)
+
+// 12 X LEDS small hexagon (always on, always white) activation flashing red, same as the sides. (12 total)
+
+// 3 X LEDs per arrow (6 in total for both arrows) white normally then on activation the directional arrow turns red and runs (6 total)
+
+// 18 X LEDs for the alarm call point sign - always white, always on (18 total)
+
+// 24 X LEDs for the FIRE sign (always RED, always on. flashing red on activation) (24 total)
+
+// LED configuration
+#define DATA_PIN_RGB1    21  
+#define DATA_PIN_RGB2    26 
+#define DATA_PIN_RGB3    47 
+#define DATA_PIN_RGB4    33  
+#define DATA_PIN_RGB5    34  
+#define DATA_PIN_RGB6    20  
+
+#define NUM_LEDS_RGB6    48     //Left and Right side LEDs
+#define NUM_LEDS_RGB5    3      //Right arrow
+#define NUM_LEDS_RGB4    3      //Left arrow
+#define NUM_LEDS_RGB3    36     //5 Hexagons and FIRE sign
+#define NUM_LEDS_RGB2    21     //Big hexagon and Alarm Call point
+
+#define RGB_LED_BRIGHTNESS 10
+
+CRGBArray<NUM_LEDS_RGB6> SideLEDs;
+CRGBArray<NUM_LEDS_RGB5> RightArrowLEDs;
+CRGBArray<NUM_LEDS_RGB4> LeftArrowLEDs;
+CRGBArray<NUM_LEDS_RGB3> SmallHexagonsAndFireLEDs;
+CRGBArray<NUM_LEDS_RGB2> BigHexagonAndAlarmCallPointLEDs;
+
+
 // Dummy Function to Read Data from Lcd
 void readData()
 {
@@ -706,10 +745,20 @@ void pageSwitch(byte pageNo)
     delay(500);
 }
 
-void iconDisplay(byte iconNo)
+void DisplayDeactivateIcon()
 {
-
-    byte iconCommand[] = {0x5A, 0xA5, 0x0F, 0x82, 0x54, 0x40, 0x30, 0x48, 0x00, 0x01, 0x01, 0x68, 0x01, 0x68, 0x00, 0x01, 0xFF, 0x00};
+    // 0x5A, 0xA5 Frame header
+    // 0x0F Data length
+    // 0x82 write instruction
+    // 0x5440 VP
+    // 0x30 icon library number 48
+    // 0x07 icon write instruction
+    // 0x0001 display an icon
+    // the starting display coordinates of upper left corner
+    // 0x001 icon no 1 in icon 48 lib
+    // ff 00 terminator
+    // byte iconCommand[] = {0x5A, 0xA5, 0x0F, 0x82, 0x54, 0x40, 0x30, 0x48, 0x00, 0x01, 0x01, 0x68, 0x01, 0x68, 0x00, 0x01, 0xFF, 0x00};
+    byte iconCommand[] = {0x5A, 0xA5, 0x0F, 0x82, 0x62, 0x18, 0x32, 0x48, 0x00, 0x01, 0x01, 0x53, 0x01, 0xCA, 0x00, 0x00, 0xFF, 0x00};
 
     Serial1.write(iconCommand, sizeof(iconCommand));
 
@@ -1219,12 +1268,12 @@ void loginTask(void *parameter)
             {
                 pageSwitch(NOTIFICATION_PAGE);
 
-                String message1 = "This is a Notification Screen";
-                showMessage(notificationStatus1, message1);
-                delay(100);
+                // String message1 = "This is a Notification Screen";
+                // showMessage(notificationStatus1, message1);
+                // delay(100);
 
-                String message2 = "Connecting to Wi-Fi";
-                showMessage(notificationStatus2, message2);
+                String message1 = "Connecting to Wi-Fi";
+                showMessage(notificationStatus1, message1);
 
                 delay(5);
                 connectInternet();
@@ -1235,6 +1284,8 @@ void loginTask(void *parameter)
                 delay(500);
                 pageSwitch(INTERNETPAGE);
                 configureInternet();
+                
+                
                 pageSwitch(NOTIFICATION_PAGE);
                 delay(1000);
             }
@@ -1292,8 +1343,8 @@ void loginTask(void *parameter)
 
             if (storedUniqueData == uniqueData)
             {
-                String message4 = "Start Slide Show after unique key";
-                showMessage(notificationStatus4, message4);
+                String message3 = "Start Slide Show after unique key";
+                showMessage(notificationStatus4, message3);
                 delay(1000);
                 // uniqueKeyFlag = true;
             }
@@ -1700,7 +1751,7 @@ void connectInternet()
                     Serial.println("WiFi Connected");
                     String InternetLoginStatus = "Wifi Connected";
 
-                    showMessage(notificationStatus2, InternetLoginStatus);
+                    showMessage(notificationStatus1, InternetLoginStatus);
                     wifiConnectedFlag = true;
 
                     break;
@@ -1709,6 +1760,17 @@ void connectInternet()
 
             if (wifiConnectedFlag)
             {
+                String message2 = "Downloading Audio";
+                Serial.println(message2);
+                showMessage(notificationStatus2, message2);
+
+                download_audio();
+
+                message2 = "Audio Downloaded";
+                Serial.println(message2);
+                showMessage(notificationStatus2, message2);
+                delay(100);
+
                 break;
             }
 
@@ -1724,7 +1786,7 @@ void connectInternet()
                 String InternetLoginStatus = "Wifi Not Connected";
                 Serial.println("Failed to connect to WiFi within 30 seconds.");
 
-                showMessage(notificationStatus2, InternetLoginStatus);
+                showMessage(notificationStatus1, InternetLoginStatus);
             }
         }
     }
@@ -1796,7 +1858,7 @@ void configureInternet()
 
                         showMessage(clientLoginStatus, InternetLoginStatus);
                         delay(500);
-                        showMessage(notificationStatus2, InternetLoginStatus);
+                        showMessage(notificationStatus1, InternetLoginStatus);
                         
                         wifiConnectedFlag = true;
                         break;
@@ -1816,6 +1878,18 @@ void configureInternet()
                 if (wifiConnectedFlag)
                 {
                     saveInternetCredentials(internetSSID, internetPassword);
+
+                    String message2 = "Downloading Audio";
+                    Serial.println(message2);
+                    showMessage(notificationStatus2, message2);
+
+                    download_audio();
+
+                    message2 = "Audio Downloaded";
+                    Serial.println(message2);
+                    showMessage(notificationStatus2, message2);
+                    delay(100);
+                    
                     break;
                 }
 
@@ -2861,70 +2935,105 @@ void slideShow()
     while (slideShowFlag) 
 	{
         vTaskSuspend(xHandledatetime); // Suspend date time task while slideShow
-
-        pageSwitch(0x0016);
-		delay(1000);
-		String ack = tempreadResponse();
-
-        if(ack == "5aa53824f4b")
-        {
-            ack = "";
-        }
-
-		Serial.print("Acknowledgment from LCD: ");
-		Serial.println(ack);
-	
-        if (checkLastFourDigitsMatch(ack, Home_Screen))
-        {
-            pageSwitch(HOME_PAGE);
-            Serial.println("Page Switched");
-            delay(5);
-            vTaskResume(xHandledatetime); // Resume if touch is detected
-            break;
-        }
-
-        pageSwitch(0x0017);
-		delay(1000);
-        ack = tempreadResponse();
-
-        if(ack == "5aa53824f4b")
-        {
-            ack = "";
-        }
-
-		Serial.print("Acknowledgment from LCD: ");
-		Serial.println(ack);
         
-        if (checkLastFourDigitsMatch(ack, Home_Screen))
-        {
-            pageSwitch(HOME_PAGE);
-            Serial.println("Page Switched");
-            delay(5);
-            vTaskResume(xHandledatetime); // Resume if touch is detected
+        String ack = tempreadResponse();
+
+        pageSwitch(FYREBOXLOGO);
+        // Record the start time
+        unsigned long startTime = millis();
+        // Check if 5 seconds have passed
+        while (millis() - startTime < 5000) {
+
+            ack = tempreadResponse();
+            
+            if(ack == "5aa53824f4b")
+            {
+                ack = "";
+            }
+
+            Serial.print("Acknowledgment from LCD: ");
+            Serial.println(ack);
+        
+            if (checkLastFourDigitsMatch(ack, Home_Screen))
+            {
+                pageSwitch(HOME_PAGE);
+                Serial.println("Page Switched");
+                delay(5);
+                slideShowFlag = false;
+                vTaskResume(xHandledatetime); // Resume if touch is detected
+                break;
+            }
+            delay(100);
+        }
+        if (!slideShowFlag) {
             break;
         }
+
+        pageSwitch(CLIENT_LOGO);
+
+        // Record the start time
+        startTime = millis();
+        // Check if 10 seconds have passed
+        while (millis() - startTime < 10000) {
+
+            ack = tempreadResponse();
+
+            if(ack == "5aa53824f4b")
+            {
+                ack = "";
+            }
+
+            Serial.print("Acknowledgment from LCD: ");
+            Serial.println(ack);
+            
+            if (checkLastFourDigitsMatch(ack, Home_Screen))
+            {
+                pageSwitch(HOME_PAGE);
+                Serial.println("Page Switched");
+                delay(5);
+                slideShowFlag = false;
+                vTaskResume(xHandledatetime); // Resume if touch is detected
+                break;
+            }
+            delay(100);
+        }
+        if (!slideShowFlag) {
+            break;
+        }
+
+        pageSwitch(EVACUATION_PROCEDURE_PAGE);
+
+        // Record the start time
+        startTime = millis();
+        // Check if 15 seconds have passed
+        while (millis() - startTime < 15000) {
+
+            ack = tempreadResponse();
+
+            if(ack == "5aa53824f4b")
+            {
+                ack = "";
+            }
+
+            Serial.print("Acknowledgment from LCD: ");
+            Serial.println(ack);
+
+            if (checkLastFourDigitsMatch(ack, Home_Screen))
+            {
+                pageSwitch(HOME_PAGE);
+                Serial.println("Page Switched");
+                delay(5);
+                slideShowFlag = false;
+                vTaskResume(xHandledatetime); // Resume if touch is detected
+                break;
+            }
+            delay(100);
+        }
+        if (!slideShowFlag) {
+            break;
+        }
+
         /*
-        pageSwitch(0x0018);
-        delay(1000);
-        ack = tempreadResponse();
-
-        if(ack == "5aa53824f4b")
-        {
-            ack = "";
-        }
-
-		Serial.print("Acknowledgment from LCD: ");
-		Serial.println(ack);
-
-        if (checkLastFourDigitsMatch(ack, Home_Screen))
-        {
-            pageSwitch(HOME_PAGE);
-            Serial.println("Page Switched");
-            delay(5);
-            vTaskResume(xHandledatetime); // Resume if touch is detected
-            break;
-        }
-
 		pageSwitch(0x0019);
         delay(1000);
 		ack = tempreadResponse();
@@ -2949,6 +3058,82 @@ void slideShow()
     Serial.println("slideShow completed");
 }
 
+void slideShow_EvacuationDiagrams() 
+{
+    Serial.println("slideShow Started");
+
+    while (slideShowFlag) 
+	{
+        vTaskSuspend(xHandledatetime); // Suspend date time task while slideShow
+        
+        String ack = tempreadResponse();
+
+        pageSwitch(SITEMAP_PAGE);
+        // Record the start time
+        unsigned long startTime = millis();
+        // Check if 30 seconds have passed
+        while (millis() - startTime < 30000) {
+
+            ack = tempreadResponse();
+            
+            if(ack == "5aa53824f4b")
+            {
+                ack = "";
+            }
+
+            Serial.print("Acknowledgment from LCD: ");
+            Serial.println(ack);
+        
+            if (checkLastFourDigitsMatch(ack, Home_Screen))
+            {
+                pageSwitch(HOME_PAGE);
+                Serial.println("Page Switched");
+                delay(5);
+                slideShowFlag = false;
+                vTaskResume(xHandledatetime); // Resume if touch is detected
+                break;
+            }
+            delay(100); 
+        }
+        if (!slideShowFlag) {
+            break;
+        }
+
+        pageSwitch(EVACUATION_PROCEDURE_PAGE);
+
+        // Record the start time
+        startTime = millis();
+        // Check if 15 seconds have passed
+        while (millis() - startTime < 15000) {
+
+            ack = tempreadResponse();
+
+            if(ack == "5aa53824f4b")
+            {
+                ack = "";
+            }
+
+            Serial.print("Acknowledgment from LCD: ");
+            Serial.println(ack);
+            
+            if (checkLastFourDigitsMatch(ack, Home_Screen))
+            {
+                pageSwitch(HOME_PAGE);
+                Serial.println("Page Switched");
+                delay(5);
+                slideShowFlag = false;
+                vTaskResume(xHandledatetime); // Resume if touch is detected
+                break;
+            }
+            delay(100);
+        }
+        if (!slideShowFlag) {
+            break;
+        }
+    }
+    Serial.println("slideShow completed");
+}
+
 void homepageTasks(void *parameter)
 {
     Serial.println("homepageTasks Started");
@@ -2965,9 +3150,62 @@ void homepageTasks(void *parameter)
         {
             checkData = "";
         }
-        // Serial.println("Data in homepageTasks:" +checkData);
+        Serial.println("Data in homepageTasks:" +checkData);
         delay(100);
 
+        // Handle site evacuation button on top priority
+        // Read the state of the push button
+        int reading = digitalRead(siteEvacuation_buttonPin);
+
+        // If the switch changed, due to noise or pressing:
+        if (reading != lastButtonState) {
+            // reset the debouncing timer
+            lastDebounceTime = millis();
+        }
+
+        if ((millis() - lastDebounceTime) > debounceDelay) {
+            // Whatever the reading is at, it's been there for longer than the debounce
+            // delay, so take it as the actual current state:
+            if (reading != buttonState) {
+                buttonState = reading;
+
+                // Only toggle the evacuation state if the new button state is LOW
+                if (buttonState == LOW) {
+                    evacuationActive = !evacuationActive;
+
+                    if (evacuationActive) {
+                        Serial.println("Start");
+                        // start leds
+                        FillSolidLeds(SideLEDs, NUM_LEDS_RGB2, CRGB::Red);    // Red when Activation
+                        delay(1000);
+                        FillSolidLeds(SideLEDs, NUM_LEDS_RGB2, CRGB::Black);
+
+                        startSiren(); 
+                        audio.connecttoFS(SD, filename); // SD card file  
+                        audio.setFileLoop(true); // Set file to loop 
+                        // send message to other nodes to activate
+                        
+                        // Start slideShow
+                        slideShowFlag = true;
+                        slideShow_EvacuationDiagrams();
+                    } else {
+                        Serial.println("Stop evacuation");
+                        stopSiren(); // Stop siren 
+                        audio.stopSong();
+                        audio.setFileLoop(false); // Reset file to loop 
+                        // stop leds
+                        // send message to other nodes to stop
+                    }
+                }
+            }
+        }
+
+        // Save the reading. Next time through the loop, it'll be the lastButtonState:
+        lastButtonState = reading;
+
+        // Small delay to stabilize the loop
+        delay(10);
+        
         // Show/Hide Menu & select between Menu functions
         if (containsPattern(checkData, "6211"))
         {
@@ -3032,6 +3270,23 @@ void homepageTasks(void *parameter)
             }
         }
 
+        // local map
+        else if(containsPattern(checkData, "6212")) 
+        {
+            pageSwitch(LOCALMAP_PAGE); 
+            Serial.println("local map");
+            delay(5);
+        }
+
+        // Site map
+        else if(containsPattern(checkData, "6213")) 
+        {
+            // pageSwitch(SITEMAP_PAGE); 
+            pageSwitch(LOCALMAP_PAGE); // only for testing
+            Serial.println("Site map");
+            delay(5);
+        }
+
         // Show Units lists
         else if(containsPattern(checkData, "6214"))
         {
@@ -3064,6 +3319,15 @@ void homepageTasks(void *parameter)
 
                 displayIcons();
             }
+        }
+
+        // Self Test
+        else if (containsPattern(checkData, "6216"))
+        {
+            Serial.println("Self Test");
+            audio.connecttoFS(SD, filename2); // SD card file  
+            audio.loop();
+            delay(1000);         
         }
 
         // Show Checklist
@@ -3110,11 +3374,43 @@ void homepageTasks(void *parameter)
             Serial.println("Data is Received, next data will be received in next week");
         }
 
-        // Start Slide show
+        // handle site evacuation button on LCD
         else if (containsPattern(checkData, "6218")) 
         {
-            activateSlideShow = true;
-            Serial.println("Data from home screen back");
+            if(containsPattern(checkData, "100"))
+            {
+                Serial.println("activate site evacuation");
+
+                // start leds
+                FillSolidLeds(SideLEDs, NUM_LEDS_RGB2, CRGB::Red);    // Red when Activation
+                delay(1000);
+                FillSolidLeds(SideLEDs, NUM_LEDS_RGB2, CRGB::Black);
+
+                startSiren();
+                audio.connecttoFS(SD, filename); // SD card file  
+                audio.setFileLoop(true); // Set file to loop
+                // send message to other nodes to activate
+
+                // Start slideShow
+                slideShowFlag = true;
+                slideShow_EvacuationDiagrams();
+            }
+
+            else if(containsPattern(checkData, "101")) 
+            {
+                Serial.println("Stop evacuation");
+                stopSiren(); // Stop siren 
+                audio.stopSong();
+                audio.setFileLoop(false); // Reset file to loop 
+                // stop leds
+                // send message to other nodes to stop
+            }
+        }
+
+        // Start Slide show
+        else if (containsPattern(checkData, "6219")) 
+        {
+            Serial.println("Start slideShow");
 
             if (containsPattern(checkData, Home_Screen_Back))
             {
@@ -3122,6 +3418,12 @@ void homepageTasks(void *parameter)
                 slideShowFlag = true;
                 slideShow();
             }
+        }
+
+        // return keycode on site map
+        else if (containsPattern(checkData, "6220")) 
+        {
+            // currently page switching
         }
 
         // Check if the idle timeout has elapsed
@@ -4235,4 +4537,178 @@ void printNetworkStats() {
     Serial.println(activeNodes);
     Serial.print("Dead Nodes: ");
     Serial.println(deadNodes);
+}
+
+// Led functions
+void setupLeds() {
+//   FastLED.addLeds<NEOPIXEL, DATA_PIN_RGB1>(leds, NUM_LEDS);
+    FastLED.addLeds<NEOPIXEL, DATA_PIN_RGB6>(SideLEDs, NUM_LEDS_RGB6);
+    FastLED.addLeds<NEOPIXEL, DATA_PIN_RGB5>(RightArrowLEDs, NUM_LEDS_RGB5);
+    FastLED.addLeds<NEOPIXEL, DATA_PIN_RGB4>(LeftArrowLEDs, NUM_LEDS_RGB4);
+    FastLED.addLeds<NEOPIXEL, DATA_PIN_RGB3>(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3);
+    FastLED.addLeds<NEOPIXEL, DATA_PIN_RGB2>(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2);
+  
+}
+
+// void setAllLedsRed() {
+//   led_blink(RGB_LED_BRIGHTNESS, 0, 0);
+//   FastLED.show();
+// }
+
+// void setAllLedsBlue() {
+//   led_blink(0, 0, RGB_LED_BRIGHTNESS);
+//   FastLED.show();
+// }
+
+// void setAllLedsGreen() {
+//   led_blink(0, RGB_LED_BRIGHTNESS, 0);
+//   FastLED.show();
+// }
+
+// void setAllLedYellow() {
+//   led_blink(RGB_LED_BRIGHTNESS, RGB_LED_BRIGHTNESS, 0);
+//   FastLED.show();
+// }
+
+// void setAllLedWhite() {
+//   led_blink(RGB_LED_BRIGHTNESS, RGB_LED_BRIGHTNESS, RGB_LED_BRIGHTNESS);
+//   FastLED.show();
+// }
+
+// void turnOffAllLeds(struct CRGB * targetArray, int numToFill) {
+//   fill_solid(targetArray, numToFill, CRGB::Black);
+//   FastLED.show();
+// }
+
+void stableWhite(struct CRGB * targetArray, int numToFill) {
+  fill_solid(targetArray, numToFill, CRGB::White);
+  FastLED.show();
+
+//   FillSolidLeds(SideLEDs, NUM_LEDS_RGB2, CRGB::White);    // White when power on
+//   delay(1000);
+//   FillSolidLeds(SideLEDs, NUM_LEDS_RGB2, CRGB::Black);
+
+}
+
+void FillSolidLeds(struct CRGB * targetArray, int numToFill, const struct CRGB& color) {
+    fill_solid(targetArray, numToFill, color);
+  FastLED.show();
+}
+
+// void stableRed() {
+//   fill_solid(leds, NUM_LEDS, CRGB::Red);
+//   FastLED.show();
+// }
+
+// void stableGreen() {
+//   fill_solid(leds, NUM_LEDS, CRGB::Green);
+//   FastLED.show();
+// }
+
+// void stableBlue() {
+//   fill_solid(leds, NUM_LEDS, CRGB::Blue);
+//   FastLED.show();
+// }
+
+// void stableYellow() {
+//   fill_solid(leds, NUM_LEDS, CRGB::Yellow);
+//   FastLED.show();
+// }
+
+// void led_blink(uint8_t red_intensity, uint8_t green_intensity, uint8_t blue_intensity) 
+// {
+
+//   for (int i = 0; i < NUM_LEDS / 2; i++) {
+//     // fade everything out
+//     leds.fadeToBlackBy(40);
+
+//     // set an LED value with user-specified intensities
+//     leds[i] = CRGB(red_intensity, green_intensity, blue_intensity);
+
+//     // mirror the first 20 leds to the last 20 leds
+//     leds(NUM_LEDS / 2, NUM_LEDS - 1) = leds(NUM_LEDS / 2 - 1, 0);
+
+//     FastLED.show();
+//     FastLED.delay(33);
+//   }
+// }
+
+void initAudio() {
+    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
+    audio.setVolume(21);                     // default 0...21
+}
+
+void download_audio() {
+  sd_card();
+  // Download both files
+//   downloadFile(resourceURL, filename); // uncomment to download audio file 1
+//   downloadFile(resourceURL2, filename2); // uncomment to download audio file 2
+}
+
+void sd_card() {
+  if (!SD.begin(5))
+  {
+    Serial.println("Card Mount Failed");
+    return;
+  }
+
+}
+
+// Function to download a file from a given URL and save it to the specified filename
+void downloadFile(const char *resourceURL, const char *filename) {
+  HTTPClient http;
+  http.begin(resourceURL);
+  int httpCode = http.GET();
+
+  if (httpCode > 0) {
+    if (httpCode == HTTP_CODE_FOUND || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+      // Handle redirection
+      String newURL = http.getLocation();
+      http.end();            // Close the first connection
+      http.begin(newURL);    // Open connection with new URL
+      httpCode = http.GET(); // Repeat GET request
+    }
+
+    if (httpCode == HTTP_CODE_OK) {
+      File file = SD.open(filename, FILE_WRITE);
+      if (file) {
+        http.writeToStream(&file);
+        file.close();
+        Serial.println("File downloaded and saved to SD card");
+      } else {
+        Serial.println("Failed to open file for writing");
+      }
+    } else {
+      Serial.printf("Failed to retrieve file. HTTP error: %s\n", http.errorToString(httpCode).c_str());
+    }
+  } else {
+    Serial.printf("Failed to retrieve file. HTTP error: %s\n", http.errorToString(httpCode).c_str());
+  }
+
+  http.end();
+}
+
+void audioTask(void * parameter) {
+
+    // audio.connecttoFS(SD, "/Fyrebox_-_Fyrebox_Alarm_with_Siren.mp3"); // SD card file
+
+    for(;;) {
+        // if (buttonPressed) {
+            audio.loop();
+        // }
+        delay(10); // Small delay to prevent watchdog timer issues
+    }
+}
+
+void startSiren() {
+    digitalWrite(SirenPIN, HIGH);
+}
+
+void stopSiren() {
+    digitalWrite(SirenPIN, LOW);
+}
+
+void palyAudio() {
+    vTaskResume(xHandleAudio);
+    audio.loop();
 }

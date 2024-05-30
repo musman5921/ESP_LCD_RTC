@@ -61,6 +61,31 @@ FyreBox Node:
 - LoRa Module: Connected at IO35 (RX) and IO36 (TX) using software serial.
 - SD Card Connection: The SIG pin must be HIGH (IO5) for the SD card to connect with the DWIN LCD.
 
+TODO:
+
+  - Integrate RGBs
+  - Activate and deactivate other nodes
+  - Send messages to visitors
+
+DONE:
+
+    - playing site evacuation audio in a loop
+    - Added button activation and deactivation
+      - if you activate the alarm from button it should be deactivated from button after slideshow
+      - if you activate the alarm from lcd it should be deactivated from lcd after slideshow
+  
+  // sreen saver slide show: 
+    // fyrebox logo for 5 seconds,
+    // client's logo for 10 seconds, 
+    // 15 seconds site evacuation diagram
+  // evacuation slide show: 
+    // Evacuation diagram - 30sec
+    // Evacuation procedure - 15sec
+    // ALL IN A LOOP UNTIL DEACTIVATED
+  // site map and local map working (we can change picture later)
+  // self test audio testing (problem resolved)
+  // site evacuation audio testing (done) 
+
 */
 
 // Import Libraries
@@ -75,19 +100,16 @@ FyreBox Node:
 SoftwareSerial SerialGPS(GPSRXPin, GPSTXPin); // not currently used
 SoftwareSerial LoRaSerial(LORA_TX_PIN, LORA_RX_PIN); // ESP32(RX), ESP32(TX)
 
+
 // Setup Function: Call Once when Code Starts
 void setup()
 {
-  // SIG pin must be HIGH for the sdcard to connect with the DWIN LCD
-  pinMode(SIGPIN, OUTPUT);
-  digitalWrite(SIGPIN, HIGH);
-
   // Start the Serial Communication with PC
   Serial.begin(115200);  
   Serial.println("Debug Serial is ready.");
 
   // Start the Serial Communication with DWIN LCD
-  Serial1.begin(115200, SERIAL_8N1, DWIN_RX_PIN, DWIN_TX_PIN); 
+  Serial1.begin(115200, SERIAL_8N1, DWIN_TX_PIN, DWIN_RX_PIN); 
   Serial.println("Serial1 is ready.");
 
   // Start the Serial Communication with LoRa module
@@ -117,7 +139,19 @@ void setup()
   Serial.println("RTC Initialized.");
 
   // This line sets date and time on RTC (year, month, date, hour, min, sec)
-  // rtc.adjust(DateTime(2024, 5, 23, 16, 0, 0));
+  // rtc.adjust(DateTime(2024, 5, 25, 16, 16, 0));
+
+  // Led Setup
+  setupLeds();
+  // stableWhite(SideLEDs, NUM_LEDS_RGB6);
+  
+  pinMode(SirenPIN, OUTPUT); // Declare siren bell pin as output
+
+  // SIG pin must be HIGH for the sdcard to connect with the DWIN LCD
+  pinMode(SIGPIN, OUTPUT); // Declare signal pin as output
+  // digitalWrite(SIGPIN, HIGH); // commented to connect sd card with ESP32 
+
+  pinMode(siteEvacuation_buttonPin, INPUT_PULLUP); 
 
   EEPROM.begin(512); // Initialize EEPROM
   preferences.begin("credentials", false); // Open Preferences with "credentials" namespace
@@ -126,9 +160,17 @@ void setup()
   Serial.println("Page Switched");
   delay(5);
 
+  // SD card configuration
+  pinMode(SD_CS, OUTPUT);
+  digitalWrite(SD_CS, HIGH);
+  SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
+  SD.begin(SD_CS);
+
+  initAudio(); // initialize audio
+
   xTaskCreatePinnedToCore(LoRatask, "LoRatask", 4096, NULL, 1, &xHandleLoRa, 1);
 
-  xTaskCreate(loginTask, "LoginTask", 4096, NULL, 2, &xHandlelogin);
+  xTaskCreate(loginTask, "LoginTask", 8192, NULL, 2, &xHandlelogin);
   
   // xTaskCreate(checkGPSTask, "CheckGPS", 2048, NULL, 1, &xHandlegps);
   // vTaskSuspend(xHandlegps);
@@ -141,6 +183,9 @@ void setup()
   
   xTaskCreate(homepageTasks, "HomepageTasks", 4096, NULL, 1, &xHandlehomepage);
   vTaskSuspend(xHandlehomepage);
+
+  xTaskCreate(audioTask, "AudioTask", 10000, NULL, 5, &xHandleAudio);
+  // vTaskSuspend(xHandleAudio);
 
   // resetVP(CLIENT_SSID);
   resetVP(VP_UNIT_DATE);
@@ -200,6 +245,9 @@ void setup()
 
   activateSlideShow = true;
 
+  setCpuFrequencyMhz(240);
+  audioSemaphore = xSemaphoreCreateBinary();
+
   // Only for testing of checklists data entery
   // EEPROM.write(EEPROMAddress, 0);
   // EEPROM.commit(); // Commit changes
@@ -211,12 +259,76 @@ void setup()
   // Only for testing of configureLogin();
   // removeClientCredentials();
   // removeAdminCredentials();
+/*
+  // only for testing 
+  bool wifiConnected = false;
+
+  // String ssid = "FRS";
+  // String password = "frspassword";
+  // String ssid = "Machadev";
+  // String password = "13060064";
+  // String ssid = "Redmi Note 12";
+  // String password = "11223344";
+
+
+  WiFi.disconnect();
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+
+  while (true)
+  {
+    if (WiFi.status() == WL_CONNECTED)
+    {
+      wifiConnected = true;
+      Serial.println("Wifi Connected");
+      break;
+    }
+    else
+    {
+      Serial.println("Connecting to Wifi...");
+      delay(500);
+    }
+  }
+
+  Serial.println("Audio Downloading");
+  download_audio();
+  Serial.println("Audio Downloaded Completed");
+  */
   
 }
 
 // Run Code in Loop
 void loop()
 {
+  /*
+  while(1){
+    FillSolidLeds(SideLEDs, NUM_LEDS_RGB6, CRGB::White);
+    delay(1000);
+    FillSolidLeds(SideLEDs, NUM_LEDS_RGB6, CRGB::Black);
+    delay(1000);
+
+    FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::Red);
+    delay(1000);
+    FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::Black);
+    delay(1000);
+
+    FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::Red);
+    delay(1000);
+    FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::Black);
+    delay(1000);
+
+    FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::Green);
+    delay(1000);
+    FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::Black);
+    delay(1000);
+
+    FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::Blue);
+    delay(1000);
+    FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::Black);
+    delay(1000);
+    
+  }*/
+
   // **************** Main Code starts here !!!!! ******************* //
   DateTime now = rtc.now();
 
