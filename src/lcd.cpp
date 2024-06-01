@@ -3060,7 +3060,7 @@ void slideShow()
 
 void slideShow_EvacuationDiagrams() 
 {
-    Serial.println("slideShow Started");
+    Serial.println("slideShow_EvacuationDiagrams Started");
 
     while (slideShowFlag) 
 	{
@@ -3093,7 +3093,21 @@ void slideShow_EvacuationDiagrams()
                 vTaskResume(xHandledatetime); // Resume if touch is detected
                 break;
             }
-            delay(100); 
+
+            // LED function here
+            // Send activation message
+
+            // Check if audio is playing
+            if (audio.isRunning()) {
+                // Serial.println("Audio is playing");
+            } else {
+                digitalWrite(SirenPIN, HIGH);
+                delay(6000);
+                digitalWrite(SirenPIN, LOW);
+                Serial.println("Audio has stopped, Restarting audio");
+                audio.connecttoFS(SD, filename); // SD card file
+                audio.loop();
+            }
         }
         if (!slideShowFlag) {
             break;
@@ -3125,13 +3139,122 @@ void slideShow_EvacuationDiagrams()
                 vTaskResume(xHandledatetime); // Resume if touch is detected
                 break;
             }
-            delay(100);
+
+            // LED function here
+            // Send activation message
+
+            // Check if audio is playing
+            if (audio.isRunning()) {
+                // Serial.println("Audio is playing");
+            } else {
+                digitalWrite(SirenPIN, HIGH);
+                delay(6000);
+                digitalWrite(SirenPIN, LOW);
+                Serial.println("Audio has stopped, Restarting audio");
+                audio.connecttoFS(SD, filename); // SD card file
+                audio.loop();
+            }
         }
         if (!slideShowFlag) {
             break;
         }
     }
-    Serial.println("slideShow completed");
+    Serial.println("slideShow_EvacuationDiagrams completed");
+}
+
+void slideShow_EvacuationDiagrams_forButton()
+{
+    Serial.println("slideShow_EvacuationDiagrams_forButton Started");
+
+    while (slideShowFlag) 
+	{
+        vTaskSuspend(xHandledatetime); // Suspend date time task while slideShow
+        
+        int val = digitalRead(siteEvacuation_buttonPin);
+        Serial.print("val : "); Serial.println(val);
+        
+        pageSwitch(SITEMAP_PAGE);
+        // Record the start time
+        unsigned long startTime = millis();
+        // Check if 30 seconds have passed
+        while (millis() - startTime < 30000) {
+            val = digitalRead(siteEvacuation_buttonPin);
+            if(val == HIGH) {
+                pageSwitch(HOME_PAGE);
+                Serial.println("Page Switched");
+                delay(5);
+                FillSolidLeds(SideLEDs, NUM_LEDS_RGB2, CRGB::Black); // clear leds
+                digitalWrite(SirenPIN, LOW); // stop siren
+                if (audio.isRunning()) {
+                    audio.stopSong(); // stop audio
+                }
+                slideShowFlag = false;
+                vTaskResume(xHandledatetime); // Resume if touch is detected
+                break;
+            }
+
+            // LED function here
+            // Send activation message
+
+            // Check if audio is playing
+            if (audio.isRunning()) {
+                // Serial.println("Audio is playing");
+                delay(10);
+            } else {
+                digitalWrite(SirenPIN, HIGH);
+                delay(6000);
+                digitalWrite(SirenPIN, LOW);
+                Serial.println("Audio has stopped, Restarting audio");
+                audio.connecttoFS(SD, filename); // SD card file
+                audio.loop();
+            }
+        }
+        if (!slideShowFlag) {
+            break;
+        }
+
+        pageSwitch(EVACUATION_PROCEDURE_PAGE);
+
+        // Record the start time
+        startTime = millis();
+        // Check if 15 seconds have passed
+        while (millis() - startTime < 15000) {
+            val = digitalRead(siteEvacuation_buttonPin);
+            if(val == HIGH) {
+                pageSwitch(HOME_PAGE);
+                Serial.println("Page Switched");
+                delay(5);
+                FillSolidLeds(SideLEDs, NUM_LEDS_RGB2, CRGB::Black); // clear leds
+                digitalWrite(SirenPIN, LOW); // stop siren
+                if (audio.isRunning()) {
+                    audio.stopSong(); // stop audio
+                }
+                slideShowFlag = false;
+                vTaskResume(xHandledatetime); // Resume if touch is detected
+                break;
+            }
+
+            // LED function here
+            // Send activation message
+
+            // Check if audio is playing
+            if (audio.isRunning()) {
+                // Serial.println("Audio is playing");
+                delay(10);
+            } else {
+                digitalWrite(SirenPIN, HIGH);
+                delay(6000);
+                digitalWrite(SirenPIN, LOW);
+                Serial.println("Audio has stopped, Restarting audio");
+                audio.connecttoFS(SD, filename); // SD card file
+                audio.loop();
+            }
+        }
+        if (!slideShowFlag) {
+            break;
+        }
+    }
+    Serial.println("slideShow_EvacuationDiagrams_forButton completed");
 }
 
 void homepageTasks(void *parameter)
@@ -3152,7 +3275,7 @@ void homepageTasks(void *parameter)
         }
         Serial.println("Data in homepageTasks:" +checkData);
         delay(100);
-
+/*
         // Handle site evacuation button on top priority
         // Read the state of the push button
         int reading = digitalRead(siteEvacuation_buttonPin);
@@ -3205,7 +3328,9 @@ void homepageTasks(void *parameter)
 
         // Small delay to stabilize the loop
         delay(10);
+*/      
         
+
         // Show/Hide Menu & select between Menu functions
         if (containsPattern(checkData, "6211"))
         {
@@ -3377,33 +3502,28 @@ void homepageTasks(void *parameter)
         // handle site evacuation button on LCD
         else if (containsPattern(checkData, "6218")) 
         {
-            if(containsPattern(checkData, "100"))
-            {
-                Serial.println("activate site evacuation");
+            if(!evacuationActivefromBTN) {
+                if(containsPattern(checkData, "100"))
+                {
+                    evacuationActivefromLCD = true;
+                    Serial.println("activate site evacuation");
 
-                // start leds
-                FillSolidLeds(SideLEDs, NUM_LEDS_RGB2, CRGB::Red);    // Red when Activation
-                delay(1000);
-                FillSolidLeds(SideLEDs, NUM_LEDS_RGB2, CRGB::Black);
+                    // Start slideShow
+                    slideShowFlag = true;
+                    slideShow_EvacuationDiagrams();
+                }
 
-                startSiren();
-                audio.connecttoFS(SD, filename); // SD card file  
-                audio.setFileLoop(true); // Set file to loop
-                // send message to other nodes to activate
-
-                // Start slideShow
-                slideShowFlag = true;
-                slideShow_EvacuationDiagrams();
-            }
-
-            else if(containsPattern(checkData, "101")) 
-            {
-                Serial.println("Stop evacuation");
-                stopSiren(); // Stop siren 
-                audio.stopSong();
-                audio.setFileLoop(false); // Reset file to loop 
-                // stop leds
-                // send message to other nodes to stop
+                else if(containsPattern(checkData, "101")) 
+                {
+                    evacuationActivefromLCD = false;
+                    FillSolidLeds(SideLEDs, NUM_LEDS_RGB2, CRGB::Black); // clear leds
+                    digitalWrite(SirenPIN, LOW); // stop siren
+                    if (audio.isRunning()) {
+                        audio.stopSong(); // stop audio
+                    }
+                    // stop leds
+                    // send message to other nodes to stop
+                }
             }
         }
 
@@ -4688,15 +4808,85 @@ void downloadFile(const char *resourceURL, const char *filename) {
   http.end();
 }
 
-void audioTask(void * parameter) {
-
-    // audio.connecttoFS(SD, "/Fyrebox_-_Fyrebox_Alarm_with_Siren.mp3"); // SD card file
+void buttonTask(void * parameter) {
 
     for(;;) {
-        // if (buttonPressed) {
-            audio.loop();
-        // }
-        delay(10); // Small delay to prevent watchdog timer issues
+        if(!evacuationActivefromLCD) {
+            while(digitalRead(siteEvacuation_buttonPin) == LOW) {
+                evacuationActivefromBTN = true;
+                // Serial.println("Evacuation started from button");
+                
+                // Start slideShow
+                slideShowFlag = true;
+                slideShow_EvacuationDiagrams_forButton();
+                
+            }
+            evacuationActivefromBTN = false;
+        }
+        delay(100);
+    }
+}
+
+void activateEvacuationtasks() {
+    vTaskResume(xHandlemessage);
+    vTaskResume(xHandleRGB);
+    vTaskResume(xHandleSound);
+    vTaskResume(xHandleSlideshow);
+}
+
+void deactivateEvacuationtasks() {
+    vTaskSuspend(xHandlemessage);
+    vTaskSuspend(xHandleRGB);
+    vTaskSuspend(xHandleSound);
+    vTaskSuspend(xHandleSlideshow);
+}
+
+void messageTask(void *parameter) {
+    Serial.println("messageTask started");
+    while(true) {
+        Serial.println("sending message to other nodes");
+        delay(5000);
+    }
+}
+
+void rgbTask(void *parameter) {
+    Serial.println("rgbTask started");
+    while(true) {
+        // activate leds
+        // FillSolidLeds(SideLEDs, NUM_LEDS_RGB2, CRGB::Red);    // Red when Activation
+        delay(3000);
+        // FillSolidLeds(SideLEDs, NUM_LEDS_RGB2, CRGB::Black);
+        delay(3000);
+    }
+}
+
+void soundTask(void *parameter) {
+    Serial.println("soundTask started");
+    while(true) {
+    // Record the start time
+    unsigned long startTime = millis();
+    // Check if 6 seconds have passed
+    while (millis() - startTime < 6000) {
+        startSiren(); 
+    }
+    audio.connecttoFS(SD, filename); // SD card file  
+    audio.setFileLoop(false);
+    }
+}
+
+void slideshowTask(void *parameter) {
+    Serial.println("slideshowTask started");
+    while(true) {
+        if(evacuationActivefromLCD){
+            // Start slideShow
+            slideShowFlag = true;
+            slideShow_EvacuationDiagrams();
+        }
+        if(evacuationActivefromBTN) {
+            // Start slideShow
+            slideShowFlag = true;
+            slideShow_EvacuationDiagrams_forButton();
+        }
     }
 }
 
@@ -4706,9 +4896,4 @@ void startSiren() {
 
 void stopSiren() {
     digitalWrite(SirenPIN, LOW);
-}
-
-void palyAudio() {
-    vTaskResume(xHandleAudio);
-    audio.loop();
 }

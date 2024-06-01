@@ -8,7 +8,11 @@
 
 #include "constant.h"
 
-TaskHandle_t xHandleAudio;
+TaskHandle_t xHandleButton;
+TaskHandle_t xHandlemessage;
+TaskHandle_t xHandleRGB;
+TaskHandle_t xHandleSound;
+TaskHandle_t xHandleSlideshow;
 TaskHandle_t xHandleLoRa;
 TaskHandle_t xHandlegps;
 TaskHandle_t xHandledatetime;
@@ -89,8 +93,10 @@ const String uniqueButtonDigits = "1101";
 
 // const String predefinedInternetSSID = "Machadev";
 // const String predefinedInternetPassword = "13060064";
-const String predefinedInternetSSID = "Redmi Note 12";
-const String predefinedInternetPassword = "11223344";
+// const String predefinedInternetSSID = "Redmi Note 12";
+// const String predefinedInternetPassword = "11223344";
+const String predefinedInternetSSID = "Machadev";
+const String predefinedInternetPassword = "Machadev321";
 const String showPassword = "103";
 const String hidePassword = "102";
 
@@ -643,6 +649,12 @@ const int siteEvacuation_buttonPin = 21; // Pin where the push button is connect
 int buttonState = HIGH; // Current state of the button (initially not pressed, because INPUT_PULLUP)
 int lastButtonState = HIGH; // Previous state of the button (initially not pressed)
 bool evacuationActive = false; // Flag to track if evacuation is active
+bool evacuationActivefromLCD = false; // Flag to track if evacuation is active from lcd
+bool evacuationActivefromBTN = false; // Flag to track if evacuation is active from button
+bool createTasksonce = false; // this flag is activated once in setup for creating evacuation tasks
 
 unsigned long lastDebounceTime = 0; // the last time the output pin was toggled
 unsigned long debounceDelay = 50; // the debounce time; increase if the output flickers
+
+unsigned long stateStartTime = 0;
+const unsigned long sirenDuration = 6000; // 6 seconds

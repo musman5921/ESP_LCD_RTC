@@ -124,6 +124,7 @@ void unitDetails();
 void devicesDirectionDetails();
 void slideShow();
 void slideShow_EvacuationDiagrams();
+void slideShow_EvacuationDiagrams_forButton();
 void homepageTasks(void *parameter);
 void CheckBoxes();
 void displayIcons();
@@ -176,10 +177,15 @@ void initAudio();
 void download_audio();
 void sd_card();
 void downloadFile(const char *resourceURL, const char *filename);
-void audioTask(void * parameter);
+void buttonTask(void * parameter);
+void activateEvacuationtasks();
+void deactivateEvacuationtasks();
+void messageTask(void *parameter);
+void rgbTask(void *parameter);
+void soundTask(void *parameter);
+void slideshowTask(void *parameter);
 void startSiren();
 void stopSiren();
-void palyAudio();
 
 
 #endif // LCD_H

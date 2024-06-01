@@ -69,22 +69,22 @@ TODO:
 
 DONE:
 
-    - playing site evacuation audio in a loop
     - Added button activation and deactivation
-      - if you activate the alarm from button it should be deactivated from button after slideshow
+      - if you activate the alarm from button it should be deactivated from button 
       - if you activate the alarm from lcd it should be deactivated from lcd after slideshow
+    - If activated ring bell for 6 sec and play audio both in a loop until deactivated accordingly
   
-  // sreen saver slide show: 
+  // sreen saver slide show settings: 
     // fyrebox logo for 5 seconds,
     // client's logo for 10 seconds, 
     // 15 seconds site evacuation diagram
-  // evacuation slide show: 
+  // evacuation slide show settings: 
     // Evacuation diagram - 30sec
     // Evacuation procedure - 15sec
     // ALL IN A LOOP UNTIL DEACTIVATED
   // site map and local map working (we can change picture later)
-  // self test audio testing (problem resolved)
-  // site evacuation audio testing (done) 
+  // self test audio working 
+  // site evacuation audio working
 
 */
 
@@ -166,7 +166,13 @@ void setup()
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   SD.begin(SD_CS);
 
-  initAudio(); // initialize audio
+  // initAudio(); // initialize audio
+
+  audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
+  audio.setVolume(21);                     // default 0...21
+
+  setCpuFrequencyMhz(240);
+  audioSemaphore = xSemaphoreCreateBinary();
 
   xTaskCreatePinnedToCore(LoRatask, "LoRatask", 4096, NULL, 1, &xHandleLoRa, 1);
 
@@ -184,8 +190,18 @@ void setup()
   xTaskCreate(homepageTasks, "HomepageTasks", 4096, NULL, 1, &xHandlehomepage);
   vTaskSuspend(xHandlehomepage);
 
-  xTaskCreate(audioTask, "AudioTask", 10000, NULL, 5, &xHandleAudio);
-  // vTaskSuspend(xHandleAudio);
+  xTaskCreate(buttonTask, "buttonTask", 10000, NULL, 5, &xHandleButton);
+
+  xTaskCreate(messageTask, "messageTask", 1024, NULL, 7, &xHandlemessage);
+  vTaskSuspend(xHandlemessage);
+  xTaskCreate(rgbTask, "rgbTask", 1024, NULL, 8, &xHandleRGB);
+  vTaskSuspend(xHandleRGB);
+  xTaskCreate(soundTask, "soundTask", 1024, NULL, 9, &xHandleSound);
+  vTaskSuspend(xHandleSound);
+  xTaskCreate(slideshowTask, "slideshowTask", 1024, NULL, 10, &xHandleSlideshow);
+  vTaskSuspend(xHandleSlideshow);
+
+  createTasksonce = true; // important to create evacuation tasks once  
 
   // resetVP(CLIENT_SSID);
   resetVP(VP_UNIT_DATE);
@@ -245,9 +261,6 @@ void setup()
 
   activateSlideShow = true;
 
-  setCpuFrequencyMhz(240);
-  audioSemaphore = xSemaphoreCreateBinary();
-
   // Only for testing of checklists data entery
   // EEPROM.write(EEPROMAddress, 0);
   // EEPROM.commit(); // Commit changes
@@ -300,6 +313,7 @@ void setup()
 // Run Code in Loop
 void loop()
 {
+  audio.loop(); // important to play audio
   /*
   while(1){
     FillSolidLeds(SideLEDs, NUM_LEDS_RGB6, CRGB::White);

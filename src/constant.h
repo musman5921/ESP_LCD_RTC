@@ -15,7 +15,11 @@
 // #define Baud_RATE_SERIAL  9600
 // #define Baud_RATE_DISPLAY  9600
 
-extern TaskHandle_t xHandleAudio;
+extern TaskHandle_t xHandleButton;
+extern TaskHandle_t xHandlemessage;
+extern TaskHandle_t xHandleRGB;
+extern TaskHandle_t xHandleSound;
+extern TaskHandle_t xHandleSlideshow;
 extern TaskHandle_t xHandleLoRa;
 extern TaskHandle_t xHandlegps;
 extern TaskHandle_t xHandledatetime;
@@ -610,8 +614,14 @@ extern const int siteEvacuation_buttonPin;
 extern int buttonState; // Current state of the button (initially not pressed, because INPUT_PULLUP)
 extern int lastButtonState; // Previous state of the button (initially not pressed)
 extern bool evacuationActive; // Flag to track if evacuation is active
+extern bool evacuationActivefromLCD;
+extern bool evacuationActivefromBTN;
+extern bool createTasksonce;
 
 extern unsigned long lastDebounceTime; // the last time the output pin was toggled
 extern unsigned long debounceDelay; // the debounce time; increase if the output flickers
+
+extern unsigned long stateStartTime;
+extern const unsigned long sirenDuration; // 6 seconds
 
 #endif // CONSTANTS_H
