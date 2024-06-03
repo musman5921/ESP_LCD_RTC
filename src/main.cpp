@@ -143,7 +143,6 @@ void setup()
 
   // Led Setup
   setupLeds();
-  // stableWhite(SideLEDs, NUM_LEDS_RGB6);
   
   pinMode(SirenPIN, OUTPUT); // Declare siren bell pin as output
 
@@ -173,9 +172,43 @@ void setup()
 
   setCpuFrequencyMhz(240);
   audioSemaphore = xSemaphoreCreateBinary();
+  
+  xTaskCreate(loginTask, "LoginTask", 8192, NULL, 1, &xHandlelogin);
 
-  xTaskCreatePinnedToCore(LoRatask, "LoRatask", 4096, NULL, 1, &xHandleLoRa, 1);
+  // xTaskCreatePinnedToCore(LoRatask, "LoRatask", 4096, NULL, 1, &xHandleLoRa, 1);
+  xTaskCreate(LoRatask, "LoRatask", 4096, NULL, 10, &xHandleLoRa);
+  vTaskSuspend(xHandleLoRa);
+  
+  xTaskCreate(configuredeviceTask, "ConfigureDeviceTask", 4096, NULL, 2, &xHandleconfigdevice);
+  vTaskSuspend(xHandleconfigdevice);
 
+  xTaskCreate(dateTimeTask, "DateTimeTask", 2048, NULL, 3, &xHandledatetime);
+  vTaskSuspend(xHandledatetime);
+
+  xTaskCreate(homepageTasks, "HomepageTasks", 4096, NULL, 7, &xHandlehomepage);
+  vTaskSuspend(xHandlehomepage);
+
+  xTaskCreate(buttonTask, "buttonTask", 10000, NULL, 8, &xHandleButton);
+  vTaskSuspend(xHandleButton);
+
+  // xTaskCreate(messageTask, "messageTask", 1024, NULL, 8, &xHandlemessage);
+  // vTaskSuspend(xHandlemessage);
+
+  xTaskCreate(rgbTask, "rgbTask", 2048, NULL, 8, &xHandleRGB);
+  vTaskSuspend(xHandleRGB);
+
+  xTaskCreate(soundTask, "soundTask", 10000, NULL, 9, &xHandleSound);
+  vTaskSuspend(xHandleSound);
+
+  // xTaskCreate(slideshowTask, "slideshowTask", 1024, NULL, 2, &xHandleSlideshow);
+  // vTaskSuspend(xHandleSlideshow);
+
+  // xTaskCreate(checkGPSTask, "CheckGPS", 2048, NULL, 1, &xHandlegps);
+  // vTaskSuspend(xHandlegps);
+
+/*
+  xTaskCreatePinnedToCore(LoRatask, "LoRatask", 4096, NULL, 6, &xHandleLoRa, 1);
+  vTaskSuspend(xHandleLoRa);
   xTaskCreate(loginTask, "LoginTask", 8192, NULL, 2, &xHandlelogin);
   
   // xTaskCreate(checkGPSTask, "CheckGPS", 2048, NULL, 1, &xHandlegps);
@@ -192,15 +225,15 @@ void setup()
 
   xTaskCreate(buttonTask, "buttonTask", 10000, NULL, 5, &xHandleButton);
 
-  xTaskCreate(messageTask, "messageTask", 1024, NULL, 7, &xHandlemessage);
-  vTaskSuspend(xHandlemessage);
+  // xTaskCreate(messageTask, "messageTask", 1024, NULL, 7, &xHandlemessage);
+  // vTaskSuspend(xHandlemessage);
   xTaskCreate(rgbTask, "rgbTask", 1024, NULL, 8, &xHandleRGB);
   vTaskSuspend(xHandleRGB);
   xTaskCreate(soundTask, "soundTask", 1024, NULL, 9, &xHandleSound);
   vTaskSuspend(xHandleSound);
-  xTaskCreate(slideshowTask, "slideshowTask", 1024, NULL, 10, &xHandleSlideshow);
-  vTaskSuspend(xHandleSlideshow);
-
+  // xTaskCreate(slideshowTask, "slideshowTask", 1024, NULL, 10, &xHandleSlideshow);
+  // vTaskSuspend(xHandleSlideshow);
+*/
   createTasksonce = true; // important to create evacuation tasks once  
 
   // resetVP(CLIENT_SSID);
@@ -313,36 +346,6 @@ void setup()
 // Run Code in Loop
 void loop()
 {
-  audio.loop(); // important to play audio
-  /*
-  while(1){
-    FillSolidLeds(SideLEDs, NUM_LEDS_RGB6, CRGB::White);
-    delay(1000);
-    FillSolidLeds(SideLEDs, NUM_LEDS_RGB6, CRGB::Black);
-    delay(1000);
-
-    FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::Red);
-    delay(1000);
-    FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::Black);
-    delay(1000);
-
-    FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::Red);
-    delay(1000);
-    FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::Black);
-    delay(1000);
-
-    FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::Green);
-    delay(1000);
-    FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::Black);
-    delay(1000);
-
-    FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::Blue);
-    delay(1000);
-    FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::Black);
-    delay(1000);
-    
-  }*/
-
   // **************** Main Code starts here !!!!! ******************* //
   DateTime now = rtc.now();
 
@@ -361,5 +364,31 @@ void loop()
   // Serial.println("Week passed by year: "+weekByYear);
   // Serial.println("Current Week by year: "+currentWeekByYear);
 
+  // // For LoRa Mesh
+  // static unsigned long lastBroadcastTime = 0;
+  // static unsigned long lastCheckTime = 0;
+  // static unsigned long lastStatusPrintTime = 0;
+  // unsigned long currentMillis = millis();
+
+  // // changing time to check functionality
+  // if (currentMillis - lastBroadcastTime > 5000) {  // Every 5 seconds 
+  //     broadcastPresence();
+  //     lastBroadcastTime = currentMillis;
+  // }
+
+  // listenForNodes();
+
+  // if (currentMillis - lastCheckTime > 5000) {  // Every 5 seconds
+  //     checkNodeActivity();
+  //     lastCheckTime = currentMillis;
+  // }
+
+  // if (currentMillis - lastStatusPrintTime > 10000) {  // Every 10 seconds
+  //     // printNodeStatuses();  // Print the statuses of all nodes
+  //     printNetworkStats(); 
+  //     displayFyreBoxUnitList();
+  //     lastStatusPrintTime = currentMillis;
+  // }
+  // delay(100);
 }
 

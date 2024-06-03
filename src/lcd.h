@@ -157,21 +157,12 @@ void printNodeStatuses();
 void printNetworkStats();
 
 // Led functions
-void setupLeds(); // used
-// void setAllLedsRed(); 
-// void setAllLedsBlue();
-// void setAllLedsGreen();
-// void setAllLedYellow();
-// void setAllLedWhite(); 
-// void turnOffAllLeds();
-// void stableWhite(); 
-// void stableRed();
-// void stableGreen();
-// void stableBlue();
-// void stableYellow();
-// void led_blink(uint8_t red_intensity, uint8_t green_intensity, uint8_t blue_intensity);
-
+void setupLeds();
 void FillSolidLeds(struct CRGB * targetArray, int numToFill, const struct CRGB& color);
+void ActivateRGBs(bool activate, bool dir = false);
+void BlinkLeds(int duration);
+void RgbArrowMove(bool dir, uint8_t speed);
+void RgbArrowMove(bool dir);
 
 void initAudio();
 void download_audio();

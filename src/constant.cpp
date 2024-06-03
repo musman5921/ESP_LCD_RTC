@@ -517,8 +517,7 @@ const int SIGPIN = 5;
 const int MOPIN = 39;
 const int M1PIN = 38;
 const int AUXPIN = 37;
-const int RLYPIN = 21;
-const int NODEID = 1;
+const int NODEID = 3;
 // variables to keep track of each node
 int totalNodes = 0;
 int activeNodes = 0;

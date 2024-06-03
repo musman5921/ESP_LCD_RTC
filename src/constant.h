@@ -521,7 +521,6 @@ extern const int SIGPIN;
 extern const int MOPIN;
 extern const int M1PIN;
 extern const int AUXPIN;
-extern const int RLYPIN;
 extern const int NODEID;
 // variables to keep track of each node
 extern int totalNodes;
