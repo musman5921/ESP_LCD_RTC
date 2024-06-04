@@ -9,7 +9,7 @@
 #include "constant.h"
 
 TaskHandle_t xHandleButton;
-TaskHandle_t xHandlemessage;
+TaskHandle_t xHandleRecmessage;
 TaskHandle_t xHandleRGB;
 TaskHandle_t xHandleSound;
 TaskHandle_t xHandleSlideshow;
@@ -517,7 +517,7 @@ const int SIGPIN = 5;
 const int MOPIN = 39;
 const int M1PIN = 38;
 const int AUXPIN = 37;
-const int NODEID = 3;
+const int NODEID = 1;
 // variables to keep track of each node
 int totalNodes = 0;
 int activeNodes = 0;
@@ -651,10 +651,17 @@ bool buttonPressedState = false;
 bool evacuationActive = false; // Flag to track if evacuation is active
 bool evacuationActivefromLCD = false; // Flag to track if evacuation is active from lcd
 bool evacuationActivefromBTN = false; // Flag to track if evacuation is active from button
-bool createTasksonce = false; // this flag is activated once in setup for creating evacuation tasks
+bool evacuationActivefromLoRa = false; // Flag to track if evacuation is active from LoRa
+bool activatedByLoRa = false; // True when activate message is received, false when deactivate message is received
+bool stopRGB = false;
+bool stopSound = false;
 
 unsigned long lastDebounceTime = 0; // the last time the output pin was toggled
 unsigned long debounceDelay = 50; // the debounce time; increase if the output flickers
 
 unsigned long stateStartTime = 0;
 const unsigned long sirenDuration = 6000; // 6 seconds
+
+// For message 
+// Your Domain name with URL path or IP address with path
+String serverName = "https://api.sms.to/sms/send";

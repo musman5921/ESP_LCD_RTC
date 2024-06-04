@@ -21,8 +21,6 @@
 #include "Audio.h"
 #include "esp32-hal-cpu.h"
 #include "freertos/semphr.h"
-#include <HTTPClient.h>
-#include <ArduinoJson.h>
 #include <Adafruit_Sensor.h>
 #include <HardwareSerial.h>
 
@@ -89,7 +87,7 @@ String readOneData(uint16_t ssidCommand);
 void performLoginCheck(bool &clientLogin, bool &adminLogin);
 void readPage();
 void pageSwitch(byte pageNo);
-void DisplayDeactivateIcon();
+void Display_AC_DEAC_Icon(byte iconNo);
 void systemReset();
 bool compareCredentials(String ssid, String password);
 bool compareInternetCredentials(String ssid, String password);
@@ -169,15 +167,13 @@ void download_audio();
 void sd_card();
 void downloadFile(const char *resourceURL, const char *filename);
 void buttonTask(void * parameter);
-void activateEvacuationtasks();
-void deactivateEvacuationtasks();
-void messageTask(void *parameter);
+void RecvMessageTask(void *parameter);
+void sendActivationMessage();
+void sendDeactivationMessage();
 void rgbTask(void *parameter);
 void soundTask(void *parameter);
-void slideshowTask(void *parameter);
-void startSiren();
-void stopSiren();
 void deactivateFromButton();
+void sendSMS();
 
 
 #endif // LCD_H

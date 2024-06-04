@@ -108,6 +108,8 @@ void setup()
   Serial.begin(115200);  
   Serial.println("Debug Serial is ready.");
 
+  Serial.println("NODEID: " + String(NODEID));
+
   // Start the Serial Communication with DWIN LCD
   Serial1.begin(115200, SERIAL_8N1, DWIN_TX_PIN, DWIN_RX_PIN); 
   Serial.println("Serial1 is ready.");
@@ -172,6 +174,8 @@ void setup()
 
   setCpuFrequencyMhz(240);
   audioSemaphore = xSemaphoreCreateBinary();
+
+  delay(1000);
   
   xTaskCreate(loginTask, "LoginTask", 8192, NULL, 1, &xHandlelogin);
 
@@ -185,56 +189,23 @@ void setup()
   xTaskCreate(dateTimeTask, "DateTimeTask", 2048, NULL, 3, &xHandledatetime);
   vTaskSuspend(xHandledatetime);
 
-  xTaskCreate(homepageTasks, "HomepageTasks", 4096, NULL, 8, &xHandlehomepage);
+  xTaskCreate(homepageTasks, "HomepageTasks", 5120, NULL, 8, &xHandlehomepage);
   vTaskSuspend(xHandlehomepage);
 
-  xTaskCreate(buttonTask, "buttonTask", 2048, NULL, 6, &xHandleButton);
+  xTaskCreate(buttonTask, "buttonTask", 5120, NULL, 9, &xHandleButton);
   vTaskSuspend(xHandleButton);
 
-  // xTaskCreate(messageTask, "messageTask", 1024, NULL, 8, &xHandlemessage);
-  // vTaskSuspend(xHandlemessage);
+  xTaskCreate(RecvMessageTask, "RecvMessageTask", 5120, NULL, 8, &xHandleRecmessage);
+  vTaskSuspend(xHandleRecmessage);
 
-  xTaskCreate(rgbTask, "rgbTask", 2048, NULL, 7, &xHandleRGB);
+  xTaskCreate(rgbTask, "rgbTask", 5120, NULL, 7, &xHandleRGB);
   vTaskSuspend(xHandleRGB);
 
   xTaskCreate(soundTask, "soundTask", 10000, NULL, 9, &xHandleSound);
   vTaskSuspend(xHandleSound);
 
-  // xTaskCreate(slideshowTask, "slideshowTask", 1024, NULL, 2, &xHandleSlideshow);
-  // vTaskSuspend(xHandleSlideshow);
-
   // xTaskCreate(checkGPSTask, "CheckGPS", 2048, NULL, 1, &xHandlegps);
   // vTaskSuspend(xHandlegps);
-
-/*
-  xTaskCreatePinnedToCore(LoRatask, "LoRatask", 4096, NULL, 6, &xHandleLoRa, 1);
-  vTaskSuspend(xHandleLoRa);
-  xTaskCreate(loginTask, "LoginTask", 8192, NULL, 2, &xHandlelogin);
-  
-  // xTaskCreate(checkGPSTask, "CheckGPS", 2048, NULL, 1, &xHandlegps);
-  // vTaskSuspend(xHandlegps);
-  
-  xTaskCreate(dateTimeTask, "DateTimeTask", 2048, NULL, 4, &xHandledatetime);
-  vTaskSuspend(xHandledatetime);
-
-  xTaskCreate(configuredeviceTask, "ConfigureDeviceTask", 4096, NULL, 3, &xHandleconfigdevice);
-  vTaskSuspend(xHandleconfigdevice);
-  
-  xTaskCreate(homepageTasks, "HomepageTasks", 4096, NULL, 1, &xHandlehomepage);
-  vTaskSuspend(xHandlehomepage);
-
-  xTaskCreate(buttonTask, "buttonTask", 10000, NULL, 5, &xHandleButton);
-
-  // xTaskCreate(messageTask, "messageTask", 1024, NULL, 7, &xHandlemessage);
-  // vTaskSuspend(xHandlemessage);
-  xTaskCreate(rgbTask, "rgbTask", 1024, NULL, 8, &xHandleRGB);
-  vTaskSuspend(xHandleRGB);
-  xTaskCreate(soundTask, "soundTask", 1024, NULL, 9, &xHandleSound);
-  vTaskSuspend(xHandleSound);
-  // xTaskCreate(slideshowTask, "slideshowTask", 1024, NULL, 10, &xHandleSlideshow);
-  // vTaskSuspend(xHandleSlideshow);
-*/
-  createTasksonce = true; // important to create evacuation tasks once  
 
   // resetVP(CLIENT_SSID);
   resetVP(VP_UNIT_DATE);

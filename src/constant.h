@@ -16,7 +16,7 @@
 // #define Baud_RATE_DISPLAY  9600
 
 extern TaskHandle_t xHandleButton;
-extern TaskHandle_t xHandlemessage;
+extern TaskHandle_t xHandleRecmessage;
 extern TaskHandle_t xHandleRGB;
 extern TaskHandle_t xHandleSound;
 extern TaskHandle_t xHandleSlideshow;
@@ -616,12 +616,17 @@ extern bool buttonPressedState;
 extern bool evacuationActive; // Flag to track if evacuation is active
 extern bool evacuationActivefromLCD;
 extern bool evacuationActivefromBTN;
-extern bool createTasksonce;
+extern bool evacuationActivefromLoRa;
+extern bool activatedByLoRa;
+extern bool stopRGB;
+extern bool stopSound;
 
 extern unsigned long lastDebounceTime; // the last time the output pin was toggled
 extern unsigned long debounceDelay; // the debounce time; increase if the output flickers
 
 extern unsigned long stateStartTime;
 extern const unsigned long sirenDuration; // 6 seconds
+
+extern String serverName;
 
 #endif // CONSTANTS_H
