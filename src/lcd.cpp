@@ -4752,12 +4752,12 @@ void setupLeds()
     FastLED.addLeds<NEOPIXEL, DATA_PIN_RGB3>(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3);
     FastLED.addLeds<NEOPIXEL, DATA_PIN_RGB2>(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2);
 
-    // clear all leds
-    FillSolidLeds(SideLEDs, NUM_LEDS_RGB6, CRGB::Black);
-    FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::Black);
-    FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::Black);
-    FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::Black);
-    FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::Black);
+    // set all leds to white
+    FillSolidLeds(SideLEDs, NUM_LEDS_RGB6, CRGB::White);
+    FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::White);
+    FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::White);
+    FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::White);
+    FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
 }
 
 void FillSolidLeds(struct CRGB *targetArray, int numToFill, const struct CRGB &color)
