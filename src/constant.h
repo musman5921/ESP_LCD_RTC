@@ -612,6 +612,7 @@ extern const int siteEvacuation_buttonPin;
 // button memory variables
 extern int buttonState; // Current state of the button (initially not pressed, because INPUT_PULLUP)
 extern int lastButtonState; // Previous state of the button (initially not pressed)
+extern bool buttonPressedState;
 extern bool evacuationActive; // Flag to track if evacuation is active
 extern bool evacuationActivefromLCD;
 extern bool evacuationActivefromBTN;

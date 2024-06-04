@@ -177,6 +177,7 @@ void soundTask(void *parameter);
 void slideshowTask(void *parameter);
 void startSiren();
 void stopSiren();
+void deactivateFromButton();
 
 
 #endif // LCD_H

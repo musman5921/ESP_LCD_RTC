@@ -647,6 +647,7 @@ const int siteEvacuation_buttonPin = 21; // Pin where the push button is connect
 // button memory variables
 int buttonState = HIGH; // Current state of the button (initially not pressed, because INPUT_PULLUP)
 int lastButtonState = HIGH; // Previous state of the button (initially not pressed)
+bool buttonPressedState = false;
 bool evacuationActive = false; // Flag to track if evacuation is active
 bool evacuationActivefromLCD = false; // Flag to track if evacuation is active from lcd
 bool evacuationActivefromBTN = false; // Flag to track if evacuation is active from button

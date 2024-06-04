@@ -185,16 +185,16 @@ void setup()
   xTaskCreate(dateTimeTask, "DateTimeTask", 2048, NULL, 3, &xHandledatetime);
   vTaskSuspend(xHandledatetime);
 
-  xTaskCreate(homepageTasks, "HomepageTasks", 4096, NULL, 7, &xHandlehomepage);
+  xTaskCreate(homepageTasks, "HomepageTasks", 4096, NULL, 8, &xHandlehomepage);
   vTaskSuspend(xHandlehomepage);
 
-  xTaskCreate(buttonTask, "buttonTask", 10000, NULL, 8, &xHandleButton);
+  xTaskCreate(buttonTask, "buttonTask", 2048, NULL, 6, &xHandleButton);
   vTaskSuspend(xHandleButton);
 
   // xTaskCreate(messageTask, "messageTask", 1024, NULL, 8, &xHandlemessage);
   // vTaskSuspend(xHandlemessage);
 
-  xTaskCreate(rgbTask, "rgbTask", 2048, NULL, 8, &xHandleRGB);
+  xTaskCreate(rgbTask, "rgbTask", 2048, NULL, 7, &xHandleRGB);
   vTaskSuspend(xHandleRGB);
 
   xTaskCreate(soundTask, "soundTask", 10000, NULL, 9, &xHandleSound);

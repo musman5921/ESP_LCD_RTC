@@ -2963,8 +2963,10 @@ void slideShow()
                 ack = "";
             }
 
-            Serial.print("Acknowledgment from LCD: ");
-            Serial.println(ack);
+            if (ack != "") {
+                Serial.print("Acknowledgment from LCD: ");
+                Serial.println(ack);
+            }
 
             if (checkLastFourDigitsMatch(ack, Home_Screen))
             {
@@ -2997,8 +2999,10 @@ void slideShow()
                 ack = "";
             }
 
-            Serial.print("Acknowledgment from LCD: ");
-            Serial.println(ack);
+            if (ack != "") {
+                Serial.print("Acknowledgment from LCD: ");
+                Serial.println(ack);
+            }
 
             if (checkLastFourDigitsMatch(ack, Home_Screen))
             {
@@ -3031,8 +3035,10 @@ void slideShow()
                 ack = "";
             }
 
-            Serial.print("Acknowledgment from LCD: ");
-            Serial.println(ack);
+            if (ack != "") {
+                Serial.print("Acknowledgment from LCD: ");
+                Serial.println(ack);
+            }
 
             if (checkLastFourDigitsMatch(ack, Home_Screen))
             {
@@ -3060,8 +3066,10 @@ void slideShow()
             ack = "";
         }
 
-        Serial.print("Acknowledgment from LCD: ");
-        Serial.println(ack);
+        if (ack != "") {
+            Serial.print("Acknowledgment from LCD: ");
+            Serial.println(ack);
+        }
 
         if (checkLastFourDigitsMatch(ack, Home_Screen))
         {
@@ -3099,8 +3107,10 @@ void slideShow_EvacuationDiagrams()
                 ack = "";
             }
 
-            Serial.print("Acknowledgment from LCD: ");
-            Serial.println(ack);
+            if (ack != "") {
+                Serial.print("Acknowledgment from LCD: ");
+                Serial.println(ack);
+            }
 
             if (checkLastFourDigitsMatch(ack, Home_Screen))
             {
@@ -3113,7 +3123,14 @@ void slideShow_EvacuationDiagrams()
             }
 
             // Send activation message
-            delay(100);
+            delay(50);
+
+            if (!buttonPressedState && evacuationActivefromBTN)
+            {
+                deactivateFromButton();
+                delay(100);
+                break;
+            }
         }
         if (!slideShowFlag)
         {
@@ -3135,8 +3152,10 @@ void slideShow_EvacuationDiagrams()
                 ack = "";
             }
 
-            Serial.print("Acknowledgment from LCD: ");
-            Serial.println(ack);
+            if (ack != "") {
+                Serial.print("Acknowledgment from LCD: ");
+                Serial.println(ack);
+            }
 
             if (checkLastFourDigitsMatch(ack, Home_Screen))
             {
@@ -3149,7 +3168,14 @@ void slideShow_EvacuationDiagrams()
             }
 
             // Send activation message
-            delay(100);
+            delay(50);
+
+            if (!buttonPressedState && evacuationActivefromBTN)
+            {
+                deactivateFromButton();
+                delay(100);
+                break;
+            }
         }
         if (!slideShowFlag)
         {
@@ -3190,10 +3216,18 @@ void slideShow_EvacuationDiagrams_forButton()
                 vTaskSuspend(xHandleSound); // stop sound
 
                 digitalWrite(SirenPIN, LOW); // stop siren
+                delay(5);
                 if (audio.isRunning())
                 {
                     audio.stopSong(); // stop audio
                 }
+                delay(10);
+
+                FillSolidLeds(SideLEDs, NUM_LEDS_RGB6, CRGB::White);
+                FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::White);
+                FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::White);
+                FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::White);
+                FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
 
                 slideShowFlag = false;
                 vTaskResume(xHandledatetime); // Resume if touch is detected
@@ -3227,10 +3261,18 @@ void slideShow_EvacuationDiagrams_forButton()
                 vTaskSuspend(xHandleSound); // stop sound
 
                 digitalWrite(SirenPIN, LOW); // stop siren
+                delay(5);
                 if (audio.isRunning())
                 {
                     audio.stopSong(); // stop audio
                 }
+                delay(10);
+
+                FillSolidLeds(SideLEDs, NUM_LEDS_RGB6, CRGB::White);
+                FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::White);
+                FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::White);
+                FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::White);
+                FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
 
                 slideShowFlag = false;
                 vTaskResume(xHandledatetime); // Resume if touch is detected
@@ -3263,8 +3305,8 @@ void homepageTasks(void *parameter)
         {
             checkData = "";
         }
-        Serial.println("Data in homepageTasks:" + checkData);
-        delay(100);
+        if (checkData != "") Serial.println("Data in homepageTasks:" + checkData);
+        delay(50);
 
         // Show/Hide Menu & select between Menu functions
         if (containsPattern(checkData, "6211"))
@@ -3439,14 +3481,20 @@ void homepageTasks(void *parameter)
         }
 
         // handle site evacuation button on LCD
-        else if (containsPattern(checkData, "6218"))
+        // else if (containsPattern(checkData, "6218"))
         {
-            if (!evacuationActivefromBTN)
+            // if (!evacuationActivefromBTN)
             {
-                if (containsPattern(checkData, "100"))
+                if ((containsPattern(checkData, "6218") && containsPattern(checkData, "100")) || buttonPressedState)
                 {
-                    evacuationActivefromLCD = true;
-                    Serial.println("activate site evacuation");
+                    if (buttonPressedState) {
+                        evacuationActivefromBTN = true;
+                        Serial.println("activate site evacuation with Button");
+                    }
+                    else {
+                        evacuationActivefromLCD = true;
+                        Serial.println("activate site evacuation with LCD");
+                    }
 
                     // Check the task state before resuming it
                     eTaskState taskState = eTaskGetState(xHandleRGB);
@@ -3469,10 +3517,21 @@ void homepageTasks(void *parameter)
                     slideShow_EvacuationDiagrams();
                 }
 
-                else if (containsPattern(checkData, "101"))
+                if (((containsPattern(checkData, "6218") && containsPattern(checkData, "101")) && evacuationActivefromLCD) || (!buttonPressedState && evacuationActivefromBTN))
                 {
-                    Serial.println("deactivate site evacuation");
-                    evacuationActivefromLCD = false;
+                    if (evacuationActivefromBTN)
+                    {
+                        Serial.println("deactivate site evacuation with Button");
+                        evacuationActivefromBTN = false;
+                    }
+
+                    if (evacuationActivefromLCD)
+                    {
+                        Serial.println("deactivate site evacuation with LCD");
+                        evacuationActivefromLCD = false;
+                    }
+
+                    
                     // ActivateRGBs(false); // deactivate leds
                     // delay(10);
 
@@ -3485,6 +3544,7 @@ void homepageTasks(void *parameter)
                     // delay(10);
                     // vTaskSuspend(xHandleSound); // stop sound
 
+                    delay(5);
                     ActivateRGBs(false); // deactivate leds
                     delay(10);
                     vTaskSuspend(xHandleRGB); // stop leds
@@ -3492,10 +3552,18 @@ void homepageTasks(void *parameter)
                     vTaskSuspend(xHandleSound); // stop sound
 
                     digitalWrite(SirenPIN, LOW); // stop siren
+                    delay(5);
                     if (audio.isRunning())
                     {
                         audio.stopSong(); // stop audio
                     }
+                    delay(10);
+
+                    FillSolidLeds(SideLEDs, NUM_LEDS_RGB6, CRGB::White);
+                    FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::White);
+                    FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::White);
+                    FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::White);
+                    FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
 
                     Serial.println("deactivate site evacuation done");
 
@@ -3505,7 +3573,7 @@ void homepageTasks(void *parameter)
         }
 
         // Start Slide show
-        else if (containsPattern(checkData, "6219"))
+        if (containsPattern(checkData, "6219"))
         {
             Serial.println("Start slideShow");
 
@@ -4892,40 +4960,64 @@ void downloadFile(const char *resourceURL, const char *filename)
     http.end();
 }
 
+// void buttonTask(void *parameter)
+// {
+//     while (true)
+//     {
+//         if (!evacuationActivefromLCD)
+//         {
+//             while (digitalRead(siteEvacuation_buttonPin) == LOW)
+//             {
+//                 evacuationActivefromBTN = true;
+//                 Serial.println("Evacuation started from button");
+
+//                 // Check the task state before resuming it
+//                 eTaskState taskState = eTaskGetState(xHandleRGB);
+//                 if (taskState == eSuspended)
+//                 {
+//                     Serial.println("rgbTask Resumed"); // start leds
+//                     vTaskResume(xHandleRGB);
+//                 }
+//                 delay(5);
+
+//                 // Check the task state before resuming it
+//                 taskState = eTaskGetState(xHandleSound);
+//                 if (taskState == eSuspended)
+//                 {
+//                     Serial.println("Sound Resumed"); // start siren and audio
+//                     vTaskResume(xHandleSound);
+//                 }
+//                 delay(5);
+
+//                 // Start slideShow
+//                 slideShowFlag = true;
+//                 slideShow_EvacuationDiagrams_forButton();
+//                 delay(5);
+//             }
+//             evacuationActivefromBTN = false;
+//         }
+//         delay(50);
+//     }
+// }
+
 void buttonTask(void *parameter)
 {
     while (true)
     {
         if (!evacuationActivefromLCD)
         {
-            while (digitalRead(siteEvacuation_buttonPin) == LOW)
+            if (digitalRead(siteEvacuation_buttonPin) == LOW)
             {
-                evacuationActivefromBTN = true;
-                // Serial.println("Evacuation started from button");
-
-                // Check the task state before resuming it
-                eTaskState taskState = eTaskGetState(xHandleRGB);
-                if (taskState == eSuspended)
-                {
-                    Serial.println("rgbTask Resumed"); // start leds
-                    vTaskResume(xHandleRGB);
-                }
-
-                // Check the task state before resuming it
-                taskState = eTaskGetState(xHandleSound);
-                if (taskState == eSuspended)
-                {
-                    Serial.println("Sound Resumed"); // start siren and audio
-                    vTaskResume(xHandleSound);
-                }
-
-                // Start slideShow
-                slideShowFlag = true;
-                slideShow_EvacuationDiagrams_forButton();
+                buttonPressedState = true;
+                // Serial.println("Evacuation button pressed");
             }
-            evacuationActivefromBTN = false;
+            else {
+                buttonPressedState = false;
+                // Serial.println("Evacuation button not pressed");
+            }
         }
-        delay(100);
+        // Serial.println("Button Task");
+        delay(50);
     }
 }
 
@@ -5025,4 +5117,63 @@ void startSiren()
 void stopSiren()
 {
     // digitalWrite(SirenPIN, LOW);
+}
+
+void deactivateFromButton()
+{
+    if (evacuationActivefromBTN)
+    {
+        Serial.println("deactivate site evacuation with Button");
+        evacuationActivefromBTN = false;
+    }
+
+    if (evacuationActivefromLCD)
+    {
+        Serial.println("deactivate site evacuation with LCD");
+        evacuationActivefromLCD = false;
+    }
+
+    
+    // ActivateRGBs(false); // deactivate leds
+    // delay(10);
+
+    // digitalWrite(SirenPIN, LOW); // stop siren
+    // if (audio.isRunning()) {
+    //     audio.stopSong(); // stop audio
+    // }
+
+    // vTaskSuspend(xHandleRGB); // stop led task
+    // delay(10);
+    // vTaskSuspend(xHandleSound); // stop sound
+
+    delay(5);
+    ActivateRGBs(false); // deactivate leds
+    delay(10);
+    vTaskSuspend(xHandleRGB); // stop leds
+    delay(10);
+    vTaskSuspend(xHandleSound); // stop sound
+
+    digitalWrite(SirenPIN, LOW); // stop siren
+    delay(5);
+    if (audio.isRunning())
+    {
+        audio.stopSong(); // stop audio
+    }
+    delay(10);
+
+    FillSolidLeds(SideLEDs, NUM_LEDS_RGB6, CRGB::White);
+    FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::White);
+    FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::White);
+    FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::White);
+    FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
+
+    pageSwitch(HOME_PAGE);
+    Serial.println("Page Switched");
+    delay(5);
+    slideShowFlag = false;
+    vTaskResume(xHandledatetime);
+
+    Serial.println("deactivate site evacuation done");
+
+    // send message to other nodes to stop
 }
