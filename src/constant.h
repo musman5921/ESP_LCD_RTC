@@ -618,8 +618,8 @@ extern bool evacuationActivefromLCD;
 extern bool evacuationActivefromBTN;
 extern bool evacuationActivefromLoRa;
 extern bool activatedByLoRa;
-extern bool stopRGB;
-extern bool stopSound;
+extern bool activateRGBflag;
+extern bool activateSoundflag;
 
 extern unsigned long lastDebounceTime; // the last time the output pin was toggled
 extern unsigned long debounceDelay; // the debounce time; increase if the output flickers

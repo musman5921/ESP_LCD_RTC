@@ -91,12 +91,12 @@ const String showAdmin = "1102";
 const String switchUser = "2ec";
 const String uniqueButtonDigits = "1101";
 
-// const String predefinedInternetSSID = "Machadev";
-// const String predefinedInternetPassword = "13060064";
+const String predefinedInternetSSID = "Machadev";
+const String predefinedInternetPassword = "13060064";
 // const String predefinedInternetSSID = "Redmi Note 12";
 // const String predefinedInternetPassword = "11223344";
-const String predefinedInternetSSID = "Machadev";
-const String predefinedInternetPassword = "Machadev321";
+// const String predefinedInternetSSID = "Machadev";
+// const String predefinedInternetPassword = "Machadev321";
 const String showPassword = "103";
 const String hidePassword = "102";
 
@@ -333,7 +333,7 @@ const int Prev_page5 = 65;
 
 // RTC
 unsigned long lastActivityTime = 0;
-const unsigned long idleTimeout = 30000; // 30 seconds
+const unsigned long idleTimeout = 6000; // 30 seconds
 
 // Database Parameters
 const String getOrgId = "2";
@@ -516,8 +516,8 @@ const int SIGPIN = 5;
 // Pins for LoRa Mesh
 const int MOPIN = 39;
 const int M1PIN = 38;
-const int AUXPIN = 37;
-const int NODEID = 1;
+const int AUXPIN = 26;
+const int NODEID = 3;
 // variables to keep track of each node
 int totalNodes = 0;
 int activeNodes = 0;
@@ -653,8 +653,8 @@ bool evacuationActivefromLCD = false; // Flag to track if evacuation is active f
 bool evacuationActivefromBTN = false; // Flag to track if evacuation is active from button
 bool evacuationActivefromLoRa = false; // Flag to track if evacuation is active from LoRa
 bool activatedByLoRa = false; // True when activate message is received, false when deactivate message is received
-bool stopRGB = false;
-bool stopSound = false;
+bool activateRGBflag = false;
+bool activateSoundflag = false;
 
 unsigned long lastDebounceTime = 0; // the last time the output pin was toggled
 unsigned long debounceDelay = 50; // the debounce time; increase if the output flickers

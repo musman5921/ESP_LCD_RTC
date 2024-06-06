@@ -177,30 +177,38 @@ void setup()
 
   delay(1000);
   
+  // To perform login
   xTaskCreate(loginTask, "LoginTask", 8192, NULL, 1, &xHandlelogin);
 
-  // xTaskCreatePinnedToCore(LoRatask, "LoRatask", 4096, NULL, 1, &xHandleLoRa, 1);
-  xTaskCreate(LoRatask, "LoRatask", 4096, NULL, 10, &xHandleLoRa);
-  vTaskSuspend(xHandleLoRa);
-  
+  // To configure device
   xTaskCreate(configuredeviceTask, "ConfigureDeviceTask", 4096, NULL, 2, &xHandleconfigdevice);
   vTaskSuspend(xHandleconfigdevice);
 
+  // To update date and time info
   xTaskCreate(dateTimeTask, "DateTimeTask", 2048, NULL, 3, &xHandledatetime);
   vTaskSuspend(xHandledatetime);
 
-  xTaskCreate(homepageTasks, "HomepageTasks", 5120, NULL, 8, &xHandlehomepage);
+  // To handle home page tasks
+  xTaskCreate(homepageTasks, "HomepageTasks", 10000, NULL, 9, &xHandlehomepage);
   vTaskSuspend(xHandlehomepage);
 
-  xTaskCreate(buttonTask, "buttonTask", 5120, NULL, 9, &xHandleButton);
+  // To handle node discovery
+  xTaskCreate(LoRatask, "LoRatask", 10000, NULL, 10, &xHandleLoRa);
+  vTaskSuspend(xHandleLoRa);  
+
+  // To handle button activation and deactivation
+  xTaskCreate(buttonTask, "buttonTask", 10000, NULL, 8, &xHandleButton);
   vTaskSuspend(xHandleButton);
 
-  xTaskCreate(RecvMessageTask, "RecvMessageTask", 5120, NULL, 8, &xHandleRecmessage);
+  // To receive messages on LoRa
+  xTaskCreate(RecvMessageTask, "RecvMessageTask", 10000, NULL, 8, &xHandleRecmessage);
   vTaskSuspend(xHandleRecmessage);
 
-  xTaskCreate(rgbTask, "rgbTask", 5120, NULL, 7, &xHandleRGB);
+  // To run leds in infinite loop upon activation
+  xTaskCreate(rgbTask, "rgbTask", 10000, NULL, 9, &xHandleRGB);
   vTaskSuspend(xHandleRGB);
 
+  // To play audio and siren bell in infinite loop upon activation
   xTaskCreate(soundTask, "soundTask", 10000, NULL, 9, &xHandleSound);
   vTaskSuspend(xHandleSound);
 

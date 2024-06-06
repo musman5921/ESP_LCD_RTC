@@ -37,8 +37,8 @@ SemaphoreHandle_t audioSemaphore;
 // 24 X LEDs for the FIRE sign (always RED, always on. flashing red on activation) (24 total)
 
 // LED configuration
-#define DATA_PIN_RGB1 21
-#define DATA_PIN_RGB2 26
+// #define DATA_PIN_RGB1 21 // used by button
+// #define DATA_PIN_RGB2 26 // used for aux pin
 #define DATA_PIN_RGB3 47
 #define DATA_PIN_RGB4 33
 #define DATA_PIN_RGB5 34
@@ -48,7 +48,7 @@ SemaphoreHandle_t audioSemaphore;
 #define NUM_LEDS_RGB5 3  // Right arrow
 #define NUM_LEDS_RGB4 3  // Left arrow
 #define NUM_LEDS_RGB3 36 // 5 Hexagons and FIRE sign
-#define NUM_LEDS_RGB2 21 // Big hexagon and Alarm Call point
+// #define NUM_LEDS_RGB2 21 // Big hexagon and Alarm Call point
 
 #define RGB_LED_BRIGHTNESS 10
 
@@ -56,7 +56,7 @@ CRGBArray<NUM_LEDS_RGB6> SideLEDs;
 CRGBArray<NUM_LEDS_RGB5> RightArrowLEDs;
 CRGBArray<NUM_LEDS_RGB4> LeftArrowLEDs;
 CRGBArray<NUM_LEDS_RGB3> SmallHexagonsAndFireLEDs;
-CRGBArray<NUM_LEDS_RGB2> BigHexagonAndAlarmCallPointLEDs;
+// CRGBArray<NUM_LEDS_RGB2> BigHexagonAndAlarmCallPointLEDs;
 
 unsigned long long millis_blink_rgb, millis_move_rgb = 0;
 int blink_speed = 500;
@@ -3089,10 +3089,9 @@ void slideShow_EvacuationDiagrams()
         pageSwitch(SITEMAP_PAGE);
         // Record the start time
         unsigned long startTime = millis();
-        // Check if 30 seconds have passed
-        while (millis() - startTime < 30000)
+        // Check if 15 seconds have passed
+        while (millis() - startTime < 15000)
         {
-
             ack = tempreadResponse();
 
             if (ack == "5aa53824f4b")
@@ -3117,19 +3116,20 @@ void slideShow_EvacuationDiagrams()
 
             delay(50);
 
-            if (!buttonPressedState && evacuationActivefromBTN)
+            if (!activatedByLoRa && evacuationActivefromLoRa)
             {
-                deactivateFromButton();
+                pageSwitch(HOME_PAGE);
+                Serial.println("Page Switched");
+                // deactivateFromButton();
+                activateRGBflag = false;
+                activateSoundflag = false;
                 delay(100);
-                break;
-            }
-            else if (!activatedByLoRa && evacuationActivefromLoRa)
-            {
-                deactivateFromButton();
-                delay(100);
+                slideShowFlag = false;
+                vTaskResume(xHandledatetime); // Resume if touch is detected
                 break;
             }
         }
+
         if (!slideShowFlag)
         {
             break;
@@ -3167,16 +3167,16 @@ void slideShow_EvacuationDiagrams()
 
             delay(50);
 
-            if (!buttonPressedState && evacuationActivefromBTN)
+            if (!activatedByLoRa && evacuationActivefromLoRa)
             {
-                deactivateFromButton();
+                pageSwitch(HOME_PAGE);
+                Serial.println("Page Switched");
+                // deactivateFromButton();
+                activateRGBflag = false;
+                activateSoundflag = false;
                 delay(100);
-                break;
-            }
-            else if (!activatedByLoRa && evacuationActivefromLoRa)
-            {
-                deactivateFromButton();
-                delay(100);
+                slideShowFlag = false;
+                vTaskResume(xHandledatetime); // Resume if touch is detected
                 break;
             }
         }
@@ -3191,6 +3191,7 @@ void slideShow_EvacuationDiagrams()
 void slideShow_EvacuationDiagrams_forButton()
 {
     Serial.println("slideShow_EvacuationDiagrams_forButton Started");
+    vTaskSuspend(xHandleLoRa); // node discovery
 
     while (slideShowFlag)
     {
@@ -3203,34 +3204,27 @@ void slideShow_EvacuationDiagrams_forButton()
         pageSwitch(SITEMAP_PAGE);
         // Record the start time
         unsigned long startTime = millis();
-        // Check if 30 seconds have passed
-        while (millis() - startTime < 30000)
+        // Check if 15 seconds have passed
+        while (millis() - startTime < 15000)
         {
             val = digitalRead(siteEvacuation_buttonPin);
             if (val == HIGH)
             {
+                // send message to other nodes to stop site evacuation
+                sendDeactivationMessage();
+
                 pageSwitch(HOME_PAGE);
                 Serial.println("Page Switched");
                 delay(5);
-                ActivateRGBs(false); // deactivate leds
-                delay(10);
-                vTaskSuspend(xHandleRGB); // stop leds
-                delay(10);
-                vTaskSuspend(xHandleSound); // stop sound
 
-                digitalWrite(SirenPIN, LOW); // stop siren
-                delay(5);
-                if (audio.isRunning())
-                {
-                    audio.stopSong(); // stop audio
-                }
-                delay(10);
+                // send message to other nodes to stop site evacuation
+                sendDeactivationMessage();
 
-                FillSolidLeds(SideLEDs, NUM_LEDS_RGB6, CRGB::White);
-                FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::White);
-                FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::White);
-                FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::White);
-                FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
+                activateRGBflag = false;
+                activateSoundflag = false;
+
+                // send message to other nodes to stop site evacuation
+                sendDeactivationMessage();
 
                 slideShowFlag = false;
                 vTaskResume(xHandledatetime); // Resume if touch is detected
@@ -3241,6 +3235,10 @@ void slideShow_EvacuationDiagrams_forButton()
         }
         if (!slideShowFlag)
         {
+            // send message to other nodes to stop site evacuation
+            sendDeactivationMessage();
+
+            vTaskResume(xHandleLoRa); // node discovery
             break;
         }
 
@@ -3254,28 +3252,21 @@ void slideShow_EvacuationDiagrams_forButton()
             val = digitalRead(siteEvacuation_buttonPin);
             if (val == HIGH)
             {
+                // send message to other nodes to stop site evacuation
+                sendDeactivationMessage();
+
                 pageSwitch(HOME_PAGE);
                 Serial.println("Page Switched");
                 delay(5);
-                ActivateRGBs(false); // deactivate leds
-                delay(10);
-                vTaskSuspend(xHandleRGB); // stop leds
-                delay(10);
-                vTaskSuspend(xHandleSound); // stop sound
 
-                digitalWrite(SirenPIN, LOW); // stop siren
-                delay(5);
-                if (audio.isRunning())
-                {
-                    audio.stopSong(); // stop audio
-                }
-                delay(10);
+                // send message to other nodes to stop site evacuation
+                sendDeactivationMessage();
 
-                FillSolidLeds(SideLEDs, NUM_LEDS_RGB6, CRGB::White);
-                FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::White);
-                FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::White);
-                FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::White);
-                FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
+                activateRGBflag = false;
+                activateSoundflag = false;
+
+                // send message to other nodes to stop site evacuation
+                sendDeactivationMessage();
 
                 slideShowFlag = false;
                 vTaskResume(xHandledatetime); // Resume if touch is detected
@@ -3286,6 +3277,10 @@ void slideShow_EvacuationDiagrams_forButton()
         }
         if (!slideShowFlag)
         {
+            // send message to other nodes to stop site evacuation
+            sendDeactivationMessage();
+
+            vTaskResume(xHandleLoRa); // node discovery
             break;
         }
     }
@@ -3484,25 +3479,31 @@ void homepageTasks(void *parameter)
         }
 
         // handle site activation
-        else if ((containsPattern(checkData, "6218") && containsPattern(checkData, "100")) || buttonPressedState || activatedByLoRa)
+        else if (containsPattern(checkData, "6218") && containsPattern(checkData, "100") || activatedByLoRa)
         {
             vTaskSuspend(xHandleLoRa); // node discovery 
 
-            if (buttonPressedState) {
-                evacuationActivefromBTN = true;
-                Serial.println("activate site evacuation with Button");
-
-                // send message to other nodes to start site evacuation
-                sendActivationMessage();
-            } 
             if (activatedByLoRa) {
                 evacuationActivefromLoRa = true;
                 Serial.println("activate site evacuation with LoRa");
                 Display_AC_DEAC_Icon(0x00); // 00 show deactivate button
+
+                activateRGBflag = true;
+                activateSoundflag = true;
             }
             if (containsPattern(checkData, "100")) {
+
+                // send message to other nodes to start site evacuation
+                sendActivationMessage();
+
                 evacuationActivefromLCD = true;
                 Serial.println("activate site evacuation with LCD");
+
+                // send message to other nodes to start site evacuation
+                sendActivationMessage();
+
+                activateRGBflag = true;
+                activateSoundflag = true;
 
                 // send message to other nodes to start site evacuation
                 sendActivationMessage();
@@ -3515,6 +3516,7 @@ void homepageTasks(void *parameter)
                 Serial.println("rgbTask Resumed"); // start leds
                 vTaskResume(xHandleRGB);
             }
+            delay(5);
 
             // Check the task state before resuming it
             taskState = eTaskGetState(xHandleSound);
@@ -3523,65 +3525,45 @@ void homepageTasks(void *parameter)
                 Serial.println("Sound Resumed"); // start siren and audio
                 vTaskResume(xHandleSound);
             }
+            delay(5);
 
             // Start slideShow
             slideShowFlag = true;
             slideShow_EvacuationDiagrams();
-            
         }
 
         // handle site deactivation
-        else if (((containsPattern(checkData, "6218") && containsPattern(checkData, "101")) && evacuationActivefromLCD) || (!buttonPressedState && evacuationActivefromBTN) 
-                    || (!activatedByLoRa && evacuationActivefromLoRa))
+        else if (containsPattern(checkData, "6218") && containsPattern(checkData, "101") || (!activatedByLoRa && evacuationActivefromLoRa))
         {
-            if (evacuationActivefromBTN)
+            if (evacuationActivefromLCD)
             {
-                Serial.println("deactivate site evacuation with Button");
-                evacuationActivefromBTN = false;
                 // send message to other nodes to stop site evacuation
                 sendDeactivationMessage();
-            }
+                delay(5);
+                sendDeactivationMessage();
 
-            else if (evacuationActivefromLCD)
-            {
                 Serial.println("deactivate site evacuation with LCD");
                 evacuationActivefromLCD = false;
+
                 // send message to other nodes to stop site evacuation
+                sendDeactivationMessage();
+                delay(5);
                 sendDeactivationMessage();
             }
 
-            else if(evacuationActivefromLoRa)
+            if(evacuationActivefromLoRa)
             {
                 Serial.println("deactivate site evacuation with LoRa");
                 evacuationActivefromLoRa = false;
                 Display_AC_DEAC_Icon(0x01); // 01 show site evacuation button
             }
 
-            delay(5);
-            ActivateRGBs(false); // deactivate leds
-            delay(10);
-            vTaskSuspend(xHandleRGB); // stop leds
-            delay(10);
-            vTaskSuspend(xHandleSound); // stop sound
+            activateRGBflag = false;
+            activateSoundflag = false;
 
-            digitalWrite(SirenPIN, LOW); // stop siren
-            delay(5);
-            if (audio.isRunning())
-            {
-                audio.stopSong(); // stop audio
-            }
-            delay(10);
-
-            FillSolidLeds(SideLEDs, NUM_LEDS_RGB6, CRGB::White);
-            FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::White);
-            FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::White);
-            FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::White);
-            FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
-
-            vTaskResume(xHandleLoRa); // node discovery 
+            vTaskResume(xHandleLoRa); // node discovery
 
             Serial.println("deactivate site evacuation done");
-            
         }
 
         // Start Slide show
@@ -3602,8 +3584,8 @@ void homepageTasks(void *parameter)
         {
             Serial.println("Idle timeout has elapsed");
             // Start slideShow
-            // slideShowFlag = true;
-            // slideShow();
+            slideShowFlag = true;
+            slideShow();
 
             // Reset the last activity time
             lastActivityTime = millis();
@@ -4551,8 +4533,8 @@ void LoRatask(void *parameter)
         unsigned long currentMillis = millis();
 
         // changing time to check functionality
-        if (currentMillis - lastBroadcastTime > 10000)
-        { // Every 30 seconds
+        if (currentMillis - lastBroadcastTime > 5000)
+        { // Every 5 seconds
             broadcastPresence();
             lastBroadcastTime = currentMillis;
         }
@@ -4614,7 +4596,7 @@ bool initializeMESH()
 
 void broadcastPresence()
 {
-    const char *presenceMsg = "FyreBox ESP32";
+    const char *presenceMsg = "Present";
     uint8_t status = mesh.sendtoWait((uint8_t *)presenceMsg, strlen(presenceMsg) + 1, RH_BROADCAST_ADDRESS);
     if (status == RH_ROUTER_ERROR_NONE)
     {
@@ -4750,20 +4732,19 @@ void printNetworkStats()
 // Led functions
 void setupLeds()
 {
-
     FastLED.setBrightness(RGB_LED_BRIGHTNESS);
     FastLED.addLeds<NEOPIXEL, DATA_PIN_RGB6>(SideLEDs, NUM_LEDS_RGB6);
     FastLED.addLeds<NEOPIXEL, DATA_PIN_RGB5>(RightArrowLEDs, NUM_LEDS_RGB5);
     FastLED.addLeds<NEOPIXEL, DATA_PIN_RGB4>(LeftArrowLEDs, NUM_LEDS_RGB4);
     FastLED.addLeds<NEOPIXEL, DATA_PIN_RGB3>(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3);
-    FastLED.addLeds<NEOPIXEL, DATA_PIN_RGB2>(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2);
+    // FastLED.addLeds<NEOPIXEL, DATA_PIN_RGB2>(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2);
 
     // set all leds to white
     FillSolidLeds(SideLEDs, NUM_LEDS_RGB6, CRGB::White);
     FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::White);
     FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::White);
     FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::White);
-    FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
+    // FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
 }
 
 void FillSolidLeds(struct CRGB *targetArray, int numToFill, const struct CRGB &color)
@@ -4776,7 +4757,7 @@ void ActivateRGBs(bool activate, bool dir)
 {
     if (activate)
     {
-        FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
+        // FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
         BlinkLeds(blink_speed);        // parameter: Blink speed
         RgbArrowMove(dir, move_speed); // 1st parameter: 1 for Right arrow, 0 for Left arrow 2nd parameter: move speed
                                        // RgbArrowMove(dir);
@@ -4787,7 +4768,7 @@ void ActivateRGBs(bool activate, bool dir)
         FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::White);
         FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::White);
         FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::White);
-        FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
+        // FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
     }
 }
 
@@ -4850,41 +4831,6 @@ void RgbArrowMove(bool dir, uint8_t speed)
         }
     }
 }
-
-//   for(int i=0; i<NUM_LEDS_RGB5; i++) //Put this in void setup()
-//   {
-//     trail_rgb_arrow_arr[i] = ((i+1) * (255 / NUM_LEDS_RGB5));
-//   }
-//   for(int i=0; i<NUM_LEDS_RGB5; i++)
-//   {
-//     for (int k = 0; k < NUM_LEDS_RGB5; k++)
-//     {
-//       if (dir) // 1 for Right arrow, 0 for Left arrow
-//       {
-//         RightArrowLEDs[k] = CRGB::Black;
-//       }
-//       else {
-//         LeftArrowLEDs[k] = CRGB::Black;
-//       }
-//     }
-//     for(int j=0; j<=i && j<NUM_LEDS_RGB5; j++)
-//     {
-//       if (dir) // 1 for Right arrow, 0 for Left arrow
-//       {
-//         RightArrowLEDs[i-j] = CHSV(Red_hue, 255, trail_rgb_arrow_arr[NUM_LEDS_RGB5-1-j]);
-//       }
-//       else {
-//         LeftArrowLEDs[i-j] = CHSV(Red_hue, 255, trail_rgb_arrow_arr[NUM_LEDS_RGB5-1-j]);
-//       }
-//     }
-//     FastLED.show();
-//     while(millis()-millis_move_rgb < SECOND_TO_MILLIS / speed)
-//     {
-//       BlinkLeds(blink_speed);
-//     }
-//     millis_move_rgb = millis();
-//   }
-// }
 
 void RgbArrowMove(bool dir)
 {
@@ -4966,63 +4912,57 @@ void downloadFile(const char *resourceURL, const char *filename)
     http.end();
 }
 
-// void buttonTask(void *parameter)
-// {
-//     while (true)
-//     {
-//         if (!evacuationActivefromLCD)
-//         {
-//             while (digitalRead(siteEvacuation_buttonPin) == LOW)
-//             {
-//                 evacuationActivefromBTN = true;
-//                 Serial.println("Evacuation started from button");
-
-//                 // Check the task state before resuming it
-//                 eTaskState taskState = eTaskGetState(xHandleRGB);
-//                 if (taskState == eSuspended)
-//                 {
-//                     Serial.println("rgbTask Resumed"); // start leds
-//                     vTaskResume(xHandleRGB);
-//                 }
-//                 delay(5);
-
-//                 // Check the task state before resuming it
-//                 taskState = eTaskGetState(xHandleSound);
-//                 if (taskState == eSuspended)
-//                 {
-//                     Serial.println("Sound Resumed"); // start siren and audio
-//                     vTaskResume(xHandleSound);
-//                 }
-//                 delay(5);
-
-//                 // Start slideShow
-//                 slideShowFlag = true;
-//                 slideShow_EvacuationDiagrams_forButton();
-//                 delay(5);
-//             }
-//             evacuationActivefromBTN = false;
-//         }
-//         delay(50);
-//     }
-// }
-
 void buttonTask(void *parameter)
 {
     while (true)
     {
         if (!evacuationActivefromLCD)
         {
-            if (digitalRead(siteEvacuation_buttonPin) == LOW)
+            while (digitalRead(siteEvacuation_buttonPin) == LOW)
             {
-                buttonPressedState = true;
-                // Serial.println("Evacuation button pressed");
+                // send message to other nodes to start site evacuation
+                sendActivationMessage();
+
+                evacuationActivefromBTN = true;
+                Serial.println("Evacuation started from button");
+
+                // send message to other nodes to start site evacuation
+                sendActivationMessage();
+
+                activateRGBflag = true;
+                activateSoundflag = true;
+
+                // Check the task state before resuming it
+                eTaskState taskState = eTaskGetState(xHandleRGB);
+                if (taskState == eSuspended)
+                {
+                    Serial.println("rgbTask Resumed"); // start leds
+                    vTaskResume(xHandleRGB);
+                }
+                delay(5);
+
+                // send message to other nodes to start site evacuation
+                sendActivationMessage();
+
+                // Check the task state before resuming it
+                taskState = eTaskGetState(xHandleSound);
+                if (taskState == eSuspended)
+                {
+                    Serial.println("Sound Resumed"); // start siren and audio
+                    vTaskResume(xHandleSound);
+                }
+                delay(5);
+
+                // send message to other nodes to start site evacuation
+                sendActivationMessage();
+
+                // Start slideShow
+                slideShowFlag = true;
+                slideShow_EvacuationDiagrams_forButton();
+                delay(5);
             }
-            else {
-                buttonPressedState = false;
-                // Serial.println("Evacuation button not pressed");
-            }
+            evacuationActivefromBTN = false;
         }
-        // Serial.println("Button Task");
         delay(50);
     }
 }
@@ -5030,7 +4970,6 @@ void buttonTask(void *parameter)
 void RecvMessageTask(void *parameter)
 {
     Serial.println("messageTask started");
-    // while (true)
     for(;;)
     {
         uint8_t buf[RH_MESH_MAX_MESSAGE_LEN];
@@ -5046,15 +4985,15 @@ void RecvMessageTask(void *parameter)
 
             String temp = (char *)buf;
 
-            if(temp == "Activate") {
+            if(temp == "FRS-Act") {
                 Serial.println("messageTask received Activate");
                 activatedByLoRa = true;
             }
-            else if (temp == "Deactivate") {
+            else if (temp == "Deact-FRS") {
                 Serial.println("messageTask received Deactivate");
                 activatedByLoRa = false;
             }
-            else {
+            else if (temp == "Present"){
                 // Update node information or add new node
                 updateNodeStatus(from);
             }
@@ -5068,7 +5007,7 @@ void RecvMessageTask(void *parameter)
 
 // 
 void sendActivationMessage() {
-  const char* activeMsg = "Activate";
+  const char* activeMsg = "FRS-Act";
   uint8_t status = mesh.sendtoWait((uint8_t*)activeMsg, strlen(activeMsg) + 1, RH_BROADCAST_ADDRESS);
   if (status == RH_ROUTER_ERROR_NONE) {
       Serial.println("Activation message sent successfully");
@@ -5081,7 +5020,7 @@ void sendActivationMessage() {
 
 // 
 void sendDeactivationMessage() {
-  const char* activeMsg = "Deactivate";
+  const char* activeMsg = "Deact-FRS";
   uint8_t status = mesh.sendtoWait((uint8_t*)activeMsg, strlen(activeMsg) + 1, RH_BROADCAST_ADDRESS);
   if (status == RH_ROUTER_ERROR_NONE) {
       Serial.println("Deactivation message sent successfully");
@@ -5097,8 +5036,19 @@ void rgbTask(void *parameter)
     Serial.println("rgbTask started");
     while (true)
     {
-        // Serial.println("rgbTask Running");
-        ActivateRGBs(true, true);
+        if(activateRGBflag) {
+            // Serial.println("rgbTask Running");
+            ActivateRGBs(true, true);
+        }
+        else if (!activateRGBflag) {
+            ActivateRGBs(false);
+
+            FillSolidLeds(SideLEDs, NUM_LEDS_RGB6, CRGB::White);
+            FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::White);
+            FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::White);
+            FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::White);
+            // FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
+        }
         delay(10);
     }
     Serial.println("rgbTask completed");
@@ -5111,20 +5061,30 @@ void soundTask(void *parameter)
     Serial.println("soundTask started");
     while (true)
     {
-        // Check if audio is playing
-        if (audio.isRunning())
-        {
-            // Serial.println("Audio is playing");
-            delay(10);
+        if(activateSoundflag) {
+            // Check if audio is playing
+            if (audio.isRunning())
+            {
+                // Serial.println("Audio is playing");
+                delay(10);
+            }
+            else
+            {
+                digitalWrite(SirenPIN, HIGH);
+                delay(6000);
+                digitalWrite(SirenPIN, LOW);
+                Serial.println("Audio has stopped, Restarting audio");
+                audio.connecttoFS(SD, filename); // SD card file
+                // audio.loop();
+            }
         }
-        else
-        {
-            digitalWrite(SirenPIN, HIGH);
-            delay(6000);
-            digitalWrite(SirenPIN, LOW);
-            Serial.println("Audio has stopped, Restarting audio");
-            audio.connecttoFS(SD, filename); // SD card file
-            // audio.loop();
+        else if (!activateSoundflag) {
+            digitalWrite(SirenPIN, LOW); // stop siren
+            if (audio.isRunning())
+            {
+                audio.stopSong(); // stop audio
+            }
+            delay(10);
         }
         audio.loop();
     }
@@ -5177,7 +5137,7 @@ void deactivateFromButton()
     FillSolidLeds(RightArrowLEDs, NUM_LEDS_RGB5, CRGB::White);
     FillSolidLeds(LeftArrowLEDs, NUM_LEDS_RGB4, CRGB::White);
     FillSolidLeds(SmallHexagonsAndFireLEDs, NUM_LEDS_RGB3, CRGB::White);
-    FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
+    // FillSolidLeds(BigHexagonAndAlarmCallPointLEDs, NUM_LEDS_RGB2, CRGB::White);
 
     pageSwitch(HOME_PAGE);
     Serial.println("Page Switched");
@@ -5224,3 +5184,4 @@ void sendSMS() {
     Serial.println("WiFi Disconnected");
   }
 }
+
