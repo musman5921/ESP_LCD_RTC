@@ -333,7 +333,7 @@ const int Prev_page5 = 65;
 
 // RTC
 unsigned long lastActivityTime = 0;
-const unsigned long idleTimeout = 6000; // 30 seconds
+const unsigned long idleTimeout = 10000; // 10 seconds
 
 // Database Parameters
 const String getOrgId = "2";
@@ -517,7 +517,10 @@ const int SIGPIN = 5;
 const int MOPIN = 39;
 const int M1PIN = 38;
 const int AUXPIN = 26;
-const int NODEID = 3;
+// const int NODEID = 2; // cola
+// const int NODEID = 4; // broll
+const int NODEID = 6; // servest
+// const int NODEID = 8; // sun
 // variables to keep track of each node
 int totalNodes = 0;
 int activeNodes = 0;

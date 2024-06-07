@@ -3044,30 +3044,6 @@ void slideShow()
         {
             break;
         }
-
-        /*
-        pageSwitch(0x0019);
-        delay(1000);
-        ack = tempreadResponse();
-
-        if(ack == "5aa53824f4b")
-        {
-            ack = "";
-        }
-
-        if (ack != "") {
-            Serial.print("Acknowledgment from LCD: ");
-            Serial.println(ack);
-        }
-
-        if (checkLastFourDigitsMatch(ack, Home_Screen))
-        {
-            pageSwitch(HOME_PAGE);
-            Serial.println("Page Switched");
-            delay(5);
-            vTaskResume(xHandledatetime); // Resume if touch is detected
-            break;
-        }*/
     }
     Serial.println("slideShow completed");
 }
@@ -3294,7 +3270,7 @@ void homepageTasks(void *parameter)
     while (true)
     {
         // Reset the last activity time
-        lastActivityTime = millis();
+        // lastActivityTime = millis();
 
         checkData = tempreadResponse();
 
@@ -3368,6 +3344,8 @@ void homepageTasks(void *parameter)
 
                 pageSwitch(HOME_PAGE);
             }
+            // Reset the last activity time
+            lastActivityTime = millis();
         }
 
         // local map
@@ -3376,6 +3354,9 @@ void homepageTasks(void *parameter)
             pageSwitch(LOCALMAP_PAGE);
             Serial.println("local map");
             delay(5);
+
+            // Reset the last activity time
+            lastActivityTime = millis();
         }
 
         // Site map
@@ -3385,6 +3366,9 @@ void homepageTasks(void *parameter)
             pageSwitch(LOCALMAP_PAGE); // only for testing
             Serial.println("Site map");
             delay(5);
+
+            // Reset the last activity time
+            lastActivityTime = millis();
         }
 
         // Show Units lists
@@ -3400,6 +3384,9 @@ void homepageTasks(void *parameter)
             FyreBoxUnitListFlag = true;
 
             FyreBoxUnitList();
+
+            // Reset the last activity time
+            lastActivityTime = millis();
         }
 
         // Show Report
@@ -3418,12 +3405,21 @@ void homepageTasks(void *parameter)
 
                 displayIcons();
             }
+
+            // Reset the last activity time
+            lastActivityTime = millis();
         }
 
         // Self Test
         else if (containsPattern(checkData, "6216"))
         {
-            Serial.println("Self Test");
+            vTaskSuspend(xHandleSound);
+
+            resetVP(clientLoginStatus);
+            String selfTest_message = "Self Test";
+            Serial.println(selfTest_message);
+            showMessage(clientLoginStatus, selfTest_message);
+                        
             audio.connecttoFS(SD, filename2); // SD card file
             while (audio.isRunning())
             {
@@ -3431,6 +3427,12 @@ void homepageTasks(void *parameter)
                 delay(10);
             }
             delay(1000);
+            resetVP(clientLoginStatus);
+
+            vTaskResume(xHandleSound);
+
+            // Reset the last activity time
+            lastActivityTime = millis();
         }
 
         // Show Checklist
@@ -3470,12 +3472,23 @@ void homepageTasks(void *parameter)
 
                 CheckBoxes();
             }
+
+            // Reset the last activity time
+            lastActivityTime = millis();
         }
 
         // Checklist Data is Received
         else if (containsPattern(checkData, "6217") && dataEnteredtoday)
         {
-            Serial.println("Data is Received, next data will be received in next week");
+            resetVP(clientLoginStatus);
+            String message = "Data is Received, next data will be received in next week";
+            Serial.println(message);
+            showMessage(clientLoginStatus, message);
+            delay(1000);
+            resetVP(clientLoginStatus);
+
+            // Reset the last activity time
+            lastActivityTime = millis();
         }
 
         // handle site activation
@@ -3530,6 +3543,7 @@ void homepageTasks(void *parameter)
             // Start slideShow
             slideShowFlag = true;
             slideShow_EvacuationDiagrams();
+            
         }
 
         // handle site deactivation
@@ -3564,6 +3578,9 @@ void homepageTasks(void *parameter)
             vTaskResume(xHandleLoRa); // node discovery
 
             Serial.println("deactivate site evacuation done");
+
+            // Reset the last activity time
+            lastActivityTime = millis();
         }
 
         // Start Slide show
@@ -3577,6 +3594,9 @@ void homepageTasks(void *parameter)
                 slideShowFlag = true;
                 slideShow();
             }
+
+            // Reset the last activity time
+            lastActivityTime = millis();
         }
 
         // Check if the idle timeout has elapsed
@@ -3584,8 +3604,8 @@ void homepageTasks(void *parameter)
         {
             Serial.println("Idle timeout has elapsed");
             // Start slideShow
-            slideShowFlag = true;
-            slideShow();
+            // slideShowFlag = true;
+            // slideShow();
 
             // Reset the last activity time
             lastActivityTime = millis();
@@ -5077,6 +5097,7 @@ void soundTask(void *parameter)
                 audio.connecttoFS(SD, filename); // SD card file
                 // audio.loop();
             }
+            audio.loop();
         }
         else if (!activateSoundflag) {
             digitalWrite(SirenPIN, LOW); // stop siren
@@ -5086,7 +5107,6 @@ void soundTask(void *parameter)
             }
             delay(10);
         }
-        audio.loop();
     }
     Serial.println("soundTask completed");
     Serial.println("soundTask suspended");

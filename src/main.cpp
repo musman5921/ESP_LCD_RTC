@@ -61,30 +61,20 @@ FyreBox Node:
 - LoRa Module: Connected at IO35 (RX) and IO36 (TX) using software serial.
 - SD Card Connection: The SIG pin must be HIGH (IO5) for the SD card to connect with the DWIN LCD.
 
+- Added activation and deactivation
+  - if you activate the alarm from button it should be deactivated from button 
+  - if you activate the alarm from lcd it should be deactivated from lcd after slideshow
+- If activated ring bell for 6 sec and play audio both in a loop until deactivated accordingly
+- Integrated RGBs
+- Activate and deactivate other nodes through LoRa
+- Send messages to visitors
+
 TODO:
 
-  - Integrate RGBs
-  - Activate and deactivate other nodes
-  - Send messages to visitors
+  - Activate screen saver slide show after 6 sec of inactivity
 
 DONE:
 
-    - Added button activation and deactivation
-      - if you activate the alarm from button it should be deactivated from button 
-      - if you activate the alarm from lcd it should be deactivated from lcd after slideshow
-    - If activated ring bell for 6 sec and play audio both in a loop until deactivated accordingly
-  
-  // sreen saver slide show settings: 
-    // fyrebox logo for 5 seconds,
-    // client's logo for 10 seconds, 
-    // 15 seconds site evacuation diagram
-  // evacuation slide show settings: 
-    // Evacuation diagram - 30sec
-    // Evacuation procedure - 15sec
-    // ALL IN A LOOP UNTIL DEACTIVATED
-  // site map and local map working (we can change picture later)
-  // self test audio working 
-  // site evacuation audio working
 
 */
 
@@ -342,32 +332,6 @@ void loop()
   int currentWeekByYear = weekByYear + 1;
   // Serial.println("Week passed by year: "+weekByYear);
   // Serial.println("Current Week by year: "+currentWeekByYear);
-
-  // // For LoRa Mesh
-  // static unsigned long lastBroadcastTime = 0;
-  // static unsigned long lastCheckTime = 0;
-  // static unsigned long lastStatusPrintTime = 0;
-  // unsigned long currentMillis = millis();
-
-  // // changing time to check functionality
-  // if (currentMillis - lastBroadcastTime > 5000) {  // Every 5 seconds 
-  //     broadcastPresence();
-  //     lastBroadcastTime = currentMillis;
-  // }
-
-  // listenForNodes();
-
-  // if (currentMillis - lastCheckTime > 5000) {  // Every 5 seconds
-  //     checkNodeActivity();
-  //     lastCheckTime = currentMillis;
-  // }
-
-  // if (currentMillis - lastStatusPrintTime > 10000) {  // Every 10 seconds
-  //     // printNodeStatuses();  // Print the statuses of all nodes
-  //     printNetworkStats(); 
-  //     displayFyreBoxUnitList();
-  //     lastStatusPrintTime = currentMillis;
-  // }
-  // delay(100);
+  
 }
 
