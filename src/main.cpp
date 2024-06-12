@@ -9,7 +9,7 @@ Firmware Details
 
 Implemented:
 
-- LoRa Task: Pinned to Core 1 to frequently update the mesh network.
+- LoRa Task: To frequently update the mesh network. (Only Node discovery)
 - Task Management:
   - All tasks are suspended except for the login task.
   - Upon completion of the login task, the device configuration task is initiated.
@@ -19,6 +19,14 @@ Implemented:
 
   - If the LoRa module is not found, the system will remain in a loop and retry until the module is detected.
   - If the RTC module is not found, the system will remain in a loop and retry until the module is detected.
+
+- Added activation and deactivation
+  - if you activate the alarm from button it should be deactivated from button of same node
+  - if you activate the alarm from lcd it should be deactivated from lcd of same node 
+- If activated ring bell for 6 sec and play audio both in a loop until deactivated accordingly
+- Integrated RGBs
+- Activate and deactivate other nodes through LoRa
+- Send messages to visitors
 
 Mesh Network Development:
 
@@ -30,14 +38,14 @@ Flow:
 - The mesh network program is identical for all nodes in the network:
   - Each node listens to other nodes in a loop.
   - Each node updates the activity status of other nodes every 10 seconds.
-  - Each node broadcasts a message every 30 seconds.
-  - Each node prints network stats every 60 seconds.
+  - Each node broadcasts a message every 5 seconds.
+  - Each node prints network stats every 20 seconds.
 
 Tests:
 
 - The network consists of 4 nodes:
   - Each node knows how many nodes are available, active, and dead in its network.
-  - Each node successfully updates its node info container every 60 seconds.
+  - Each node successfully updates its node info container every 10 seconds.
   - Note: There is no acknowledgment message for broadcasted messages.
 
 PlatformIO Configuration:
@@ -50,24 +58,14 @@ monitor_speed = 115200
 
 Escalator Node:
 
-- The AUX pin of the LoRa module is NOT connected to the ESP32.
 - The relay is active low, with an LED connected in series with the relay.
 
 FyreBox Node:
 
-- The AUX pin of the LoRa module is NOT connected to the ESP32 S3 Mini.
 - Serial0: Used for program uploading and debugging.
 - Serial1: DWIN LCD is connected at IO15 (TX of LCD) and IO16 (RX of LCD).
 - LoRa Module: Connected at IO35 (RX) and IO36 (TX) using software serial.
 - SD Card Connection: The SIG pin must be HIGH (IO5) for the SD card to connect with the DWIN LCD.
-
-- Added activation and deactivation
-  - if you activate the alarm from button it should be deactivated from button 
-  - if you activate the alarm from lcd it should be deactivated from lcd after slideshow
-- If activated ring bell for 6 sec and play audio both in a loop until deactivated accordingly
-- Integrated RGBs
-- Activate and deactivate other nodes through LoRa
-- Send messages to visitors
 
 TODO:
 
@@ -75,6 +73,21 @@ TODO:
 
 DONE:
 
+  - Added Firmware update Over-The-Air (FOTA)
+
+EXTRA:
+
+  // 24 X LEDs for each of the sides - so 24x 2 (each side). Always on in white. Activation, flashing red. (48 total)
+
+  // 3  X LEDS for the big hexagon (always on in white) always on (3 total)
+
+  // 12  X LEDS small hexagon (always on, always white) activation flashing red, same as the sides. (12 total)
+
+  // 3 X LEDs per arrow (6 in total for both arrows) white normally then on activation the directional arrow turns red and runs (6 total)
+
+  // 18 X LEDs for the alarm call point sign - always white, always on (18 total)
+
+  // 24 X LEDs for the FIRE sign (always RED, always on. flashing red on activation) (24 total)
 
 */
 
@@ -85,27 +98,26 @@ DONE:
 #include <EEPROM.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <OTA_cert.h>
 
 // Initialize and define SoftwareSerial object
-SoftwareSerial SerialGPS(GPSRXPin, GPSTXPin); // not currently used
+SoftwareSerial SerialGPS(GPSRXPin, GPSTXPin); // Not currently used
 SoftwareSerial LoRaSerial(LORA_TX_PIN, LORA_RX_PIN); // ESP32(RX), ESP32(TX)
 
-
 // Setup Function: Call Once when Code Starts
-void setup()
-{
-  // Start the Serial Communication with PC
-  Serial.begin(115200);  
+void setup() {
+  Serial.begin(115200); // Start the Serial Communication with PC 
   Serial.println("Debug Serial is ready.");
 
   Serial.println("NODEID: " + String(NODEID));
 
-  // Start the Serial Communication with DWIN LCD
-  Serial1.begin(115200, SERIAL_8N1, DWIN_TX_PIN, DWIN_RX_PIN); 
+  Serial.print("Active Firmware version: ");
+  Serial.println(FirmwareVer);
+
+  Serial1.begin(115200, SERIAL_8N1, DWIN_TX_PIN, DWIN_RX_PIN); // Start the Serial Communication with DWIN LCD 
   Serial.println("Serial1 is ready.");
 
-  // Start the Serial Communication with LoRa module
-  LoRaSerial.begin(9600);
+  LoRaSerial.begin(9600); // Start the Serial Communication with LoRa module
   Serial.println("LoRaSerial is ready.");
 
   // Init driver(LoRa E32) and mesh manager
@@ -133,8 +145,7 @@ void setup()
   // This line sets date and time on RTC (year, month, date, hour, min, sec)
   // rtc.adjust(DateTime(2024, 5, 25, 16, 16, 0));
 
-  // Led Setup
-  setupLeds();
+  setupLeds(); // Led Setup
   
   pinMode(SirenPIN, OUTPUT); // Declare siren bell pin as output
 
@@ -142,13 +153,10 @@ void setup()
   pinMode(SIGPIN, OUTPUT); // Declare signal pin as output
   // digitalWrite(SIGPIN, HIGH); // commented to connect sd card with ESP32 
 
-  pinMode(siteEvacuation_buttonPin, INPUT_PULLUP); 
+  pinMode(siteEvacuation_buttonPin, INPUT_PULLUP); // Declare button pin as input and enable internal pull up
 
   EEPROM.begin(512); // Initialize EEPROM
   preferences.begin("credentials", false); // Open Preferences with "credentials" namespace
-  delay(5);
-  pageSwitch(COPYRIGHT); // Switch to Copyright Page
-  Serial.println("Page Switched");
   delay(5);
 
   // SD card configuration
@@ -163,7 +171,7 @@ void setup()
   audio.setVolume(21);                     // default 0...21
 
   setCpuFrequencyMhz(240);
-  audioSemaphore = xSemaphoreCreateBinary();
+  audioSemaphore = xSemaphoreCreateBinary(); 
 
   delay(1000);
   
@@ -259,63 +267,20 @@ void setup()
   resetVP(notificationStatus2);
   resetVP(notificationStatus3);
   resetVP(notificationStatus4);
-  delay(100);
+  delay(50);
 
-  activateSlideShow = true;
+  pageSwitch(COPYRIGHT); // Switch to Copyright Page
+  Serial.println("Page Switched");
+  delay(5);
 
-  // Only for testing of checklists data entery
-  // EEPROM.write(EEPROMAddress, 0);
-  // EEPROM.commit(); // Commit changes
-
-  // Only for testing of configureInternet();
-  // preferences.putString("internetSSID", " ");
-  // preferences.putString("internetPass", " ");
-
-  // Only for testing of configureLogin();
-  // removeClientCredentials();
-  // removeAdminCredentials();
-/*
-  // only for testing 
-  bool wifiConnected = false;
-
-  // String ssid = "FRS";
-  // String password = "frspassword";
-  // String ssid = "Machadev";
-  // String password = "13060064";
-  // String ssid = "Redmi Note 12";
-  // String password = "11223344";
-
-
-  WiFi.disconnect();
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-
-  while (true)
-  {
-    if (WiFi.status() == WL_CONNECTED)
-    {
-      wifiConnected = true;
-      Serial.println("Wifi Connected");
-      break;
-    }
-    else
-    {
-      Serial.println("Connecting to Wifi...");
-      delay(500);
-    }
-  }
-
-  Serial.println("Audio Downloading");
-  download_audio();
-  Serial.println("Audio Downloaded Completed");
-  */
-  
 }
 
 // Run Code in Loop
 void loop()
 {
   // **************** Main Code starts here !!!!! ******************* //
+  OTA_repeatedCall();
+
   DateTime now = rtc.now();
 
   day = DAY.toInt(); 

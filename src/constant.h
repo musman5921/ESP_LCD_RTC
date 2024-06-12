@@ -242,8 +242,10 @@ extern const int NOTIFICATION_PAGE;
 extern const int LOCALMAP_PAGE; 
 extern const int SITEMAP_PAGE;
 extern const int EVACUATION_PROCEDURE_PAGE;
-extern const int CLIENT_LOGO;
 extern const int FYREBOXLOGO;
+extern const int CLIENT_LOGO_BROLL;
+extern const int CLIENT_LOGO_SUN;
+extern const int CLIENT_LOGO_SERVEST;
 
 extern const int VP_UNIT_DATE;
 extern const int VP_UNIT_TIME;
@@ -383,7 +385,6 @@ extern bool arrowFlags;
 extern bool displayIconsFlag;
 extern bool checkBoxFlag;
 extern bool FyreBoxUnitListFlag;
-extern bool activateSlideShow;
 extern bool slideShowFlag;
 extern bool ConfigureDeviceFlag;
 extern bool dataEnteredtoday;
@@ -579,15 +580,27 @@ extern const String ReturnKeyCode_Active_Prev;
 extern const String ReturnKeyCode_Inactive_Next;
 extern const String ReturnKeyCode_Inactive_Prev;
 
-// RGB LED configuration
-// extern const int DATA_PIN_RGB1;
-// extern const int DATA_PIN_RGB2;
-// extern const int DATA_PIN_RGB3;
-// extern const int DATA_PIN_RGB4;
-// extern const int DATA_PIN_RGB5;
-// extern const int DATA_PIN_RGB6;
-// extern const int NUM_LEDS;
-// extern const int RGB_LED_BRIGHTNESS;
+// LED configuration
+#define DATA_PIN_RGB1 26 // used for aux pin 
+#define DATA_PIN_RGB2 47
+#define DATA_PIN_RGB3 33
+#define DATA_PIN_RGB4 34
+#define DATA_PIN_RGB5 20
+
+#define NUM_LEDS_RGB1 21 // Big hexagon and Alarm Call point
+#define NUM_LEDS_RGB2 36 // 5 Hexagons and FIRE sign
+#define NUM_LEDS_RGB3 3  // Left arrow
+#define NUM_LEDS_RGB4 3  // Right arrow
+#define NUM_LEDS_RGB5 48 // Left and Right side LEDs
+
+#define RGB_LED_BRIGHTNESS 10 // 0 to 255
+
+extern unsigned long long millis_blink_rgb, millis_move_rgb;
+extern int blink_speed;
+extern int move_speed;
+extern int move_id;
+extern bool prev_blink_color;
+extern unsigned long SECOND_TO_MILLIS;
 
 // Digital I/O used for SD Card
 extern const int SD_CS;
@@ -609,11 +622,6 @@ extern const char *filename2;
 extern const int SirenPIN;
 extern const int siteEvacuation_buttonPin;
 
-// button memory variables
-extern int buttonState; // Current state of the button (initially not pressed, because INPUT_PULLUP)
-extern int lastButtonState; // Previous state of the button (initially not pressed)
-extern bool buttonPressedState;
-extern bool evacuationActive; // Flag to track if evacuation is active
 extern bool evacuationActivefromLCD;
 extern bool evacuationActivefromBTN;
 extern bool evacuationActivefromLoRa;
@@ -621,12 +629,13 @@ extern bool activatedByLoRa;
 extern bool activateRGBflag;
 extern bool activateSoundflag;
 
-extern unsigned long lastDebounceTime; // the last time the output pin was toggled
-extern unsigned long debounceDelay; // the debounce time; increase if the output flickers
-
-extern unsigned long stateStartTime;
-extern const unsigned long sirenDuration; // 6 seconds
-
 extern String serverName;
+
+// For FOTA
+extern String FirmwareVer; //Current Firmware version
+extern unsigned long OTA_previousMillis;  // will store last time Firmware update was checked
+extern const long OTA_interval; //Interval for checking OTA
+extern String URL_fw_Version;
+extern String URL_fw_Bin;
 
 #endif // CONSTANTS_H

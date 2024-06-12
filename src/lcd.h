@@ -23,6 +23,9 @@
 #include "freertos/semphr.h"
 #include <Adafruit_Sensor.h>
 #include <HardwareSerial.h>
+#include <HTTPUpdate.h>
+#include <WiFiClientSecure.h>
+#include "OTA_cert.h"
 
 // For LoRa Mesh networking
 #include <RH_E32.h>
@@ -160,7 +163,6 @@ void FillSolidLeds(struct CRGB * targetArray, int numToFill, const struct CRGB& 
 void ActivateRGBs(bool activate, bool dir = false);
 void BlinkLeds(int duration);
 void RgbArrowMove(bool dir, uint8_t speed);
-void RgbArrowMove(bool dir);
 
 void initAudio();
 void download_audio();
@@ -175,5 +177,9 @@ void soundTask(void *parameter);
 void deactivateFromButton();
 void sendSMS();
 
+// FOTA functions
+int FirmwareVersionCheck(void);
+void firmwareUpdate(void);
+void OTA_repeatedCall();
 
 #endif // LCD_H
